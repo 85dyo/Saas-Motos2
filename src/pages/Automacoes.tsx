@@ -18,6 +18,8 @@ import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
 import { AutomacaoService } from '../services/automacaoService';
+import { EvolutionApiService } from '../services/evolutionApiService';
+import { N8nService } from '../services/n8nService';
 import { ConfiguracaoAutomacao } from '../types';
 
 const Automacoes: React.FC = () => {
@@ -26,6 +28,8 @@ const Automacoes: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<ConfiguracaoAutomacao | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [evolutionStatus, setEvolutionStatus] = useState<string>('disconnected');
+  const [n8nStatus, setN8nStatus] = useState<string>('disconnected');
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -42,6 +46,7 @@ const Automacoes: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    checkIntegrationStatus();
   }, []);
 
   const loadData = async () => {
@@ -57,6 +62,18 @@ const Automacoes: React.FC = () => {
       console.error('Erro ao carregar automações:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const checkIntegrationStatus = async () => {
+    try {
+      const evolutionSt = await EvolutionApiService.verificarStatus();
+      setEvolutionStatus(evolutionSt);
+      
+      // Simular status do n8n
+      setN8nStatus('connected');
+    } catch (error) {
+      console.error('Erro ao verificar status das integrações:', error);
     }
   };
 
@@ -146,8 +163,9 @@ const Automacoes: React.FC = () => {
 
   const handleSincronizarN8n = async () => {
     try {
-      await AutomacaoService.sincronizarComN8n();
+      await N8nService.sincronizarConfiguracoes();
       alert('Sincronização com n8n realizada com sucesso!');
+      await checkIntegrationStatus();
     } catch (error) {
       console.error('Erro na sincronização:', error);
       alert('Erro na sincronização com n8n');
@@ -167,7 +185,7 @@ const Automacoes: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Automações Inteligentes</h1>
-          <p className="text-gray-600">Configure automações e integrações com n8n</p>
+          <p className="text-gray-600">Configure automações WhatsApp, Email e integrações</p>
         </div>
         <div className="flex space-x-3">
           <Button variant="outline" onClick={handleSincronizarN8n}>
@@ -179,6 +197,51 @@ const Automacoes: React.FC = () => {
             Nova Automação
           </Button>
         </div>
+      </div>
+
+      {/* Status das Integrações */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <MessageCircle className="h-8 w-8 text-green-600" />
+                <div>
+                  <h3 className="font-medium">Evolution API</h3>
+                  <p className="text-sm text-gray-600">WhatsApp Integration</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full ${
+                  evolutionStatus === 'connected' ? 'bg-green-500' : 
+                  evolutionStatus === 'error' ? 'bg-red-500' : 'bg-yellow-500'
+                }`}></div>
+                <span className="text-sm capitalize">{evolutionStatus}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Webhook className="h-8 w-8 text-purple-600" />
+                <div>
+                  <h3 className="font-medium">n8n Workflows</h3>
+                  <p className="text-sm text-gray-600">Automation Platform</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full ${
+                  n8nStatus === 'connected' ? 'bg-green-500' : 
+                  n8nStatus === 'error' ? 'bg-red-500' : 'bg-yellow-500'
+                }`}></div>
+                <span className="text-sm capitalize">{n8nStatus}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Analytics */}

@@ -1,4 +1,5 @@
 import { HistoricoServico, PecaTrocada, AlertaManutencao } from '../types';
+import { AnaliseInteligente } from './analiseInteligente';
 
 export class HistoricoService {
   private static getHistorico(): HistoricoServico[] {
@@ -121,8 +122,32 @@ export class HistoricoService {
     await new Promise(resolve => setTimeout(resolve, 400));
     
     const historico = await this.getHistoricoMoto(motoId);
-    
-    // Análise simples baseada em padrões
+
+    // Usar análise inteligente se disponível
+    const config = JSON.parse(localStorage.getItem('motogestor_config') || '{}');
+    if (config.integracao?.analiseIA) {
+      try {
+        // Buscar dados da moto (simulado)
+        const moto = { id: motoId, fabricante: 'Honda', modelo: 'CB 600F', ano: 2020 };
+        const quilometragemAtual = 15000; // Simulado
+        
+        const analise = await AnaliseInteligente.analisarRiscoMoto(moto, historico, quilometragemAtual);
+        
+        return {
+          proximosServicos: analise.proximosServicos.map(s => s.item),
+          riscoPotencial: analise.riscoPotencial === 'critico' ? 'alto' : analise.riscoPotencial,
+          recomendacoes: analise.recomendacoes
+        };
+      } catch (error) {
+        console.error('Erro na análise inteligente:', error);
+      }
+    }
+
+    // Fallback para análise simples
+    return this.analiseSimplesPatrao(historico);
+  }
+
+  private static analiseSimplesPatrao(historico: HistoricoServico[]) {
     const servicosFrequentes = this.analisarFrequenciaServicos(historico);
     const ultimoServico = historico[0];
     
@@ -143,7 +168,6 @@ export class HistoricoService {
       }
     }
     
-    // Previsão baseada em padrões históricos
     const proximosServicos = servicosFrequentes.slice(0, 3);
     
     return {

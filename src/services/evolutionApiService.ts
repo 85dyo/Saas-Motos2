@@ -9,6 +9,14 @@ export class EvolutionApiService {
     status: 'disconnected'
   };
 
+  // Carregar configuração do localStorage
+  static loadConfig(): void {
+    const stored = localStorage.getItem('evolution_api_config');
+    if (stored) {
+      this.config = { ...this.config, ...JSON.parse(stored) };
+    }
+  }
+
   // Configuração da instância
   static async configurarInstancia(config: Partial<EvolutionAPIConfig>): Promise<void> {
     this.config = { ...this.config, ...config };
@@ -16,12 +24,14 @@ export class EvolutionApiService {
   }
 
   static getConfig(): EvolutionAPIConfig {
+    this.loadConfig();
     const stored = localStorage.getItem('evolution_api_config');
     return stored ? JSON.parse(stored) : this.config;
   }
 
   // Criar instância no Evolution API
   static async criarInstancia(): Promise<boolean> {
+    this.loadConfig();
     try {
       const response = await fetch(`${this.config.baseUrl}/instance/create`, {
         method: 'POST',
@@ -62,6 +72,7 @@ export class EvolutionApiService {
 
   // Conectar WhatsApp (gerar QR Code)
   static async conectarWhatsApp(): Promise<{ qrcode?: string; status: string }> {
+    this.loadConfig();
     try {
       const response = await fetch(`${this.config.baseUrl}/instance/connect/${this.config.instanceName}`, {
         method: 'GET',
@@ -80,6 +91,13 @@ export class EvolutionApiService {
 
   // Enviar mensagem de texto
   static async enviarMensagem(numero: string, mensagem: string): Promise<boolean> {
+    this.loadConfig();
+    
+    if (!this.config.apiKey || !this.config.baseUrl) {
+      console.error('Evolution API não configurada');
+      return false;
+    }
+    
     try {
       const response = await fetch(`${this.config.baseUrl}/message/sendText/${this.config.instanceName}`, {
         method: 'POST',
@@ -102,6 +120,13 @@ export class EvolutionApiService {
 
   // Enviar documento/PDF
   static async enviarDocumento(numero: string, arquivo: File, caption?: string): Promise<boolean> {
+    this.loadConfig();
+    
+    if (!this.config.apiKey || !this.config.baseUrl) {
+      console.error('Evolution API não configurada');
+      return false;
+    }
+    
     try {
       const formData = new FormData();
       formData.append('number', numero);
@@ -160,6 +185,7 @@ export class EvolutionApiService {
 
   // Verificar status da instância
   static async verificarStatus(): Promise<string> {
+    this.loadConfig();
     try {
       const response = await fetch(`${this.config.baseUrl}/instance/connectionState/${this.config.instanceName}`, {
         method: 'GET',
@@ -185,6 +211,7 @@ export class EvolutionApiService {
 
   // Listar contatos
   static async listarContatos(): Promise<any[]> {
+    this.loadConfig();
     try {
       const response = await fetch(`${this.config.baseUrl}/chat/findContacts/${this.config.instanceName}`, {
         method: 'GET',
@@ -207,6 +234,12 @@ export class EvolutionApiService {
 
   // Enviar histórico médico por WhatsApp
   static async enviarHistoricoMedico(cliente: Cliente, motoId: string, pdfBlob: Blob): Promise<boolean> {
+    this.loadConfig();
+    
+    if (!this.config.apiKey || !this.config.baseUrl) {
+      throw new Error('Evolution API não configurada. Configure nas Automações.');
+    }
+    
     try {
       const numero = cliente.telefone.replace(/\D/g, '');
       const moto = cliente.motos.find(m => m.id === motoId);

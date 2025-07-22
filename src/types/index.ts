@@ -218,9 +218,15 @@ export interface ConfiguracoesSistema {
   };
   integracao: {
     n8nWebhookUrl?: string;
+    n8nToken?: string;
+    evolutionApiUrl?: string;
+    evolutionApiKey?: string;
+    evolutionInstanceName?: string;
     whatsappApiKey?: string;
     emailProvider?: 'sendgrid' | 'mailgun' | 'ses';
     smsProvider?: 'twilio' | 'zenvia';
+    analiseIA?: boolean;
+    alertasPreditivos?: boolean;
   };
 }
 

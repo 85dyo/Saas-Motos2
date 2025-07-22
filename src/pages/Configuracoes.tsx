@@ -350,6 +350,53 @@ const Configuracoes: React.FC = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
+              <CardTitle>Evolution API (WhatsApp)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input
+                label="URL Base da API"
+                value={config.integracao.evolutionApiUrl || ''}
+                onChange={(e) => setConfig(prev => ({
+                  ...prev,
+                  integracao: { ...prev.integracao, evolutionApiUrl: e.target.value }
+                }))}
+                placeholder="https://evolution-api.exemplo.com"
+              />
+              
+              <Input
+                label="API Key"
+                type="password"
+                value={config.integracao.evolutionApiKey || ''}
+                onChange={(e) => setConfig(prev => ({
+                  ...prev,
+                  integracao: { ...prev.integracao, evolutionApiKey: e.target.value }
+                }))}
+                placeholder="Sua chave da Evolution API"
+              />
+              
+              <Input
+                label="Nome da Instância"
+                value={config.integracao.evolutionInstanceName || 'motogestor-instance'}
+                onChange={(e) => setConfig(prev => ({
+                  ...prev,
+                  integracao: { ...prev.integracao, evolutionInstanceName: e.target.value }
+                }))}
+              />
+              
+              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                  <span className="text-sm font-medium text-blue-800">Status: Configurado</span>
+                </div>
+                <Button variant="outline" size="sm">
+                  Testar Conexão
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>Integração n8n</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -361,6 +408,17 @@ const Configuracoes: React.FC = () => {
                   integracao: { ...prev.integracao, n8nWebhookUrl: e.target.value }
                 }))}
                 placeholder="https://n8n.exemplo.com/webhook/motogestor"
+              />
+              
+              <Input
+                label="Token de Autenticação"
+                type="password"
+                value={config.integracao.n8nToken || ''}
+                onChange={(e) => setConfig(prev => ({
+                  ...prev,
+                  integracao: { ...prev.integracao, n8nToken: e.target.value }
+                }))}
+                placeholder="Token para autenticação no n8n"
               />
               
               <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
@@ -409,6 +467,51 @@ const Configuracoes: React.FC = () => {
                   <option value="twilio">Twilio</option>
                   <option value="zenvia">Zenvia</option>
                 </select>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de IA</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Análise Inteligente de Risco</h4>
+                  <p className="text-sm text-gray-600">Usar IA para analisar padrões de manutenção</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.integracao.analiseIA || false}
+                    onChange={(e) => setConfig(prev => ({
+                      ...prev,
+                      integracao: { ...prev.integracao, analiseIA: e.target.checked }
+                    }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Alertas Preditivos</h4>
+                  <p className="text-sm text-gray-600">Gerar alertas baseados no manual do fabricante</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.integracao.alertasPreditivos || true}
+                    onChange={(e) => setConfig(prev => ({
+                      ...prev,
+                      integracao: { ...prev.integracao, alertasPreditivos: e.target.checked }
+                    }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
               </div>
             </CardContent>
           </Card>
