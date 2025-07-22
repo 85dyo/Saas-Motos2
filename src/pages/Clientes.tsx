@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Phone, Mail, Download, MessageCircle, Calendar, TrendingUp, Users, Clock, Filter } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Phone, Mail, Download, MessageCircle, Calendar, TrendingUp, Users, Clock, Filter, UserPlus, DollarSign, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
