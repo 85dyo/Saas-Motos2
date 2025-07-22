@@ -452,12 +452,17 @@ const ConfiguracoesCampos: React.FC = () => {
                 value={formCampo.opcoes?.join('\n') || ''}
                 onChange={(e) => setFormCampo(prev => ({ 
                   ...prev, 
-                  opcoes: e.target.value.split('\n').filter(o => o.trim()) 
+                  opcoes: e.target.value.split('\n').filter(o => o.trim() !== '') 
                 }))}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 rows={4}
-                placeholder="Opção 1&#10;Opção 2&#10;Opção 3"
+                placeholder="Opção 1
+Opção 2
+Opção 3"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Digite uma opção por linha. Pressione Enter para nova linha.
+              </p>
             </div>
           )}
 
