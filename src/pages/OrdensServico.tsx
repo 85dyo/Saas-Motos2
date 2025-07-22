@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Eye, CheckCircle, Clock, UserPlus } from 'lucide-react';
+import { Plus, Search, Edit, Eye, CheckCircle, Clock, UserPlus, BarChart3, Filter } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
