@@ -12,6 +12,7 @@ import Configuracoes from './pages/Configuracoes';
 import PortalCliente from './pages/PortalCliente';
 import GestaoFinanceira from './pages/GestaoFinanceira';
 import Estoque from './pages/Estoque';
+import ConfiguracoesCampos from './pages/ConfiguracoesCampos';
 
 // Protected Route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -132,6 +133,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Configuracoes />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/campos" 
+            element={
+              <ProtectedRoute>
+                <ConfiguracoesCampos />
               </ProtectedRoute>
             } 
           />

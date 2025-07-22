@@ -5,6 +5,7 @@ export class TemaService {
     {
       id: 'default',
       nome: 'MotoGestor Padrão',
+      logo: '/logo-default.png',
       cores: {
         primaria: '#3B82F6',
         secundaria: '#6B7280',
@@ -12,14 +13,18 @@ export class TemaService {
         aviso: '#F59E0B',
         erro: '#EF4444',
         fundo: '#F9FAFB',
-        texto: '#111827'
+        texto: '#111827',
+        fundoSecundario: '#FFFFFF',
+        bordas: '#E5E7EB'
       },
+      modo: 'light',
       ativo: true,
       createdAt: new Date()
     },
     {
       id: 'dark',
       nome: 'Modo Escuro',
+      logo: '/logo-dark.png',
       cores: {
         primaria: '#3B82F6',
         secundaria: '#9CA3AF',
@@ -27,14 +32,18 @@ export class TemaService {
         aviso: '#F59E0B',
         erro: '#EF4444',
         fundo: '#1F2937',
-        texto: '#F9FAFB'
+        texto: '#F9FAFB',
+        fundoSecundario: '#374151',
+        bordas: '#4B5563'
       },
+      modo: 'dark',
       ativo: false,
       createdAt: new Date()
     },
     {
       id: 'orange',
       nome: 'Laranja Vibrante',
+      logo: '/logo-orange.png',
       cores: {
         primaria: '#EA580C',
         secundaria: '#6B7280',
@@ -42,8 +51,49 @@ export class TemaService {
         aviso: '#F59E0B',
         erro: '#EF4444',
         fundo: '#FFF7ED',
-        texto: '#111827'
+        texto: '#111827',
+        fundoSecundario: '#FFFFFF',
+        bordas: '#FED7AA'
       },
+      modo: 'light',
+      ativo: false,
+      createdAt: new Date()
+    },
+    {
+      id: 'green',
+      nome: 'Verde Natureza',
+      logo: '/logo-green.png',
+      cores: {
+        primaria: '#059669',
+        secundaria: '#6B7280',
+        sucesso: '#10B981',
+        aviso: '#F59E0B',
+        erro: '#EF4444',
+        fundo: '#F0FDF4',
+        texto: '#111827',
+        fundoSecundario: '#FFFFFF',
+        bordas: '#BBF7D0'
+      },
+      modo: 'light',
+      ativo: false,
+      createdAt: new Date()
+    },
+    {
+      id: 'purple',
+      nome: 'Roxo Elegante',
+      logo: '/logo-purple.png',
+      cores: {
+        primaria: '#7C3AED',
+        secundaria: '#6B7280',
+        sucesso: '#10B981',
+        aviso: '#F59E0B',
+        erro: '#EF4444',
+        fundo: '#FAF5FF',
+        texto: '#111827',
+        fundoSecundario: '#FFFFFF',
+        bordas: '#DDD6FE'
+      },
+      modo: 'light',
       ativo: false,
       createdAt: new Date()
     }
@@ -100,6 +150,18 @@ export class TemaService {
     root.style.setProperty('--cor-erro', tema.cores.erro);
     root.style.setProperty('--cor-fundo', tema.cores.fundo);
     root.style.setProperty('--cor-texto', tema.cores.texto);
+    root.style.setProperty('--cor-fundo-secundario', tema.cores.fundoSecundario);
+    root.style.setProperty('--cor-bordas', tema.cores.bordas);
+
+    // Aplicar classe do modo
+    document.body.classList.remove('light-mode', 'dark-mode');
+    document.body.classList.add(`${tema.modo}-mode`);
+
+    // Atualizar meta theme-color para PWA
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', tema.cores.primaria);
+    }
 
     // Salvar tema ativo
     localStorage.setItem('tema_ativo', tema.id);
@@ -138,8 +200,52 @@ export class TemaService {
       aviso: '#F59E0B',
       erro: '#EF4444',
       fundo: this.ajustarCor(corBase, 95),
-      texto: '#111827'
+      texto: '#111827',
+      fundoSecundario: '#FFFFFF',
+      bordas: this.ajustarCor(corBase, 80)
     };
+  }
+
+  // Gerar tema escuro baseado em um tema claro
+  static gerarTemaEscuro(temaClaro: TemaPersonalizado): TemaPersonalizado {
+    return {
+      ...temaClaro,
+      id: `${temaClaro.id}_dark`,
+      nome: `${temaClaro.nome} - Escuro`,
+      modo: 'dark',
+      cores: {
+        ...temaClaro.cores,
+        fundo: '#1F2937',
+        fundoSecundario: '#374151',
+        texto: '#F9FAFB',
+        bordas: '#4B5563'
+      },
+      ativo: false
+    };
+  }
+
+  // Upload de logo personalizado
+  static async uploadLogo(file: File, temaId: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const logoUrl = e.target?.result as string;
+        
+        // Salvar no localStorage (em produção seria upload para servidor)
+        const temas = JSON.parse(localStorage.getItem('motogestor_temas') || '[]');
+        const temaIndex = temas.findIndex((t: TemaPersonalizado) => t.id === temaId);
+        
+        if (temaIndex !== -1) {
+          temas[temaIndex].logo = logoUrl;
+          localStorage.setItem('motogestor_temas', JSON.stringify(temas));
+          resolve(logoUrl);
+        } else {
+          reject(new Error('Tema não encontrado'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+      reader.readAsDataURL(file);
+    });
   }
 
   private static ajustarCor(cor: string, porcentagem: number): string {

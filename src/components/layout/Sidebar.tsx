@@ -11,7 +11,8 @@ import {
   LogOut,
   Wrench,
   DollarSign,
-  Package
+  Package,
+  Sliders
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { NavItem } from '../../types';
@@ -29,7 +30,8 @@ const Sidebar: React.FC = () => {
     { name: 'Financeiro', href: '/financeiro', icon: DollarSign },
     { name: 'Automações', href: '/automacoes', icon: Wrench },
     { name: 'Usuários', href: '/usuarios', icon: UserCircle, adminOnly: true },
-    { name: 'Configurações', href: '/configuracoes', icon: Settings, adminOnly: true }
+    { name: 'Configurações', href: '/configuracoes', icon: Settings, adminOnly: true },
+    { name: 'Campos Customizados', href: '/campos', icon: Sliders, adminOnly: true }
   ];
 
   const handleLogout = () => {

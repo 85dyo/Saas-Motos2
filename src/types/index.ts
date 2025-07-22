@@ -245,6 +245,7 @@ export interface EvolutionAPIConfig {
 export interface TemaPersonalizado {
   id: string;
   nome: string;
+  logo?: string;
   cores: {
     primaria: string;
     secundaria: string;
@@ -253,8 +254,10 @@ export interface TemaPersonalizado {
     erro: string;
     fundo: string;
     texto: string;
+    fundoSecundario: string;
+    bordas: string;
   };
-  logo?: string;
+  modo: 'light' | 'dark';
   ativo: boolean;
   createdAt: Date;
 }
@@ -380,5 +383,74 @@ export interface RelatorioAvancado {
     destinatarios: string[];
   };
   ultimaExecucao?: Date;
+  ativo: boolean;
+}
+
+// Configuração de Campos Customizados
+export interface CampoCustomizado {
+  id: string;
+  nome: string;
+  tipo: 'text' | 'email' | 'phone' | 'number' | 'date' | 'select' | 'textarea';
+  label: string;
+  placeholder?: string;
+  obrigatorio: boolean;
+  visivel: boolean;
+  ordem: number;
+  opcoes?: string[];
+  validacao?: {
+    min?: number;
+    max?: number;
+    pattern?: string;
+  };
+}
+
+export interface ConfiguracaoSecao {
+  id: string;
+  nome: string;
+  campos: CampoCustomizado[];
+}
+
+// Catálogo de Peças baseado nas referências Honda/Yamaha
+export interface CatalogoPeca {
+  id: string;
+  codigo: string;
+  nome: string;
+  categoria: 'motor' | 'transmissao' | 'freios' | 'suspensao' | 'eletrica' | 'carroceria' | 'filtros' | 'lubrificantes';
+  subcategoria: string;
+  fabricante: string;
+  modelosCompativeis: string[];
+  anosCompativeis: number[];
+  especificacoes: {
+    [key: string]: string;
+  };
+  precoSugerido?: number;
+  fornecedores: {
+    nome: string;
+    preco: number;
+    prazoEntrega: number;
+    disponibilidade: 'disponivel' | 'sob_encomenda' | 'indisponivel';
+  }[];
+  imagem?: string;
+  manual?: string; // URL do manual/especificação
+}
+
+// Tipos de Serviço Pré-definidos
+export interface TipoServico {
+  id: string;
+  nome: string;
+  categoria: 'preventiva' | 'corretiva' | 'revisao' | 'emergencia' | 'customizada';
+  descricao: string;
+  tempoEstimado: number; // em horas
+  precoBase?: number;
+  pecasNecessarias?: {
+    pecaId: string;
+    quantidade: number;
+    obrigatoria: boolean;
+  }[];
+  intervalos?: {
+    quilometragem?: number;
+    tempo?: number; // em meses
+  };
+  fabricantesEspecificos?: string[];
   ativo: boolean;
 }

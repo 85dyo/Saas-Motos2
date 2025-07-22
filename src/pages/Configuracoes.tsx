@@ -9,12 +9,19 @@ import {
   Mail,
   MessageCircle,
   Save,
-  TestTube
+  TestTube,
+  Palette,
+  Upload,
+  Monitor,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
+import { TemaService } from '../services/temaService';
+import { TemaPersonalizado } from '../types';
 import { ConfiguracoesSistema } from '../types';
 
 const Configuracoes: React.FC = () => {
@@ -24,7 +31,8 @@ const Configuracoes: React.FC = () => {
       endereco: 'Rua das Motos, 123 - Centro',
       telefone: '(11) 99999-9999',
       email: 'contato@oficinamotogestor.com',
-      cnpj: '12.345.678/0001-90'
+      cnpj: '12.345.678/0001-90',
+      logo: ''
     },
     notificacoes: {
       email: true,
@@ -46,8 +54,21 @@ const Configuracoes: React.FC = () => {
     }
   });
 
+  const [temas, setTemas] = useState<TemaPersonalizado[]>([]);
+  const [temaAtivo, setTemaAtivo] = useState<TemaPersonalizado | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('geral');
+
+  useEffect(() => {
+    loadTemas();
+  }, []);
+
+  const loadTemas = async () => {
+    const temasData = await TemaService.getTemas();
+    const ativo = await TemaService.getTemaAtivo();
+    setTemas(temasData);
+    setTemaAtivo(ativo);
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -62,6 +83,30 @@ const Configuracoes: React.FC = () => {
     alert('Configurações salvas com sucesso!');
   };
 
+  const handleAtivarTema = async (temaId: string) => {
+    await TemaService.ativarTema(temaId);
+    await loadTemas();
+  };
+
+  const handleUploadLogo = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const logoUrl = e.target?.result as string;
+        setConfig(prev => ({
+          ...prev,
+          oficina: { ...prev.oficina, logo: logoUrl }
+        }));
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Erro ao fazer upload da logo:', error);
+    }
+  };
+
   const handleTestWhatsApp = async () => {
     alert('Teste de WhatsApp enviado! Verifique seu telefone.');
   };
@@ -72,6 +117,7 @@ const Configuracoes: React.FC = () => {
 
   const tabs = [
     { id: 'geral', name: 'Geral', icon: Building },
+    { id: 'aparencia', name: 'Aparência', icon: Palette },
     { id: 'notificacoes', name: 'Notificações', icon: Bell },
     { id: 'automacoes', name: 'Automações', icon: Settings },
     { id: 'integracao', name: 'Integrações', icon: Smartphone },
@@ -165,8 +211,166 @@ const Configuracoes: React.FC = () => {
                 }))}
               />
             </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Logo da Empresa</label>
+              <div className="flex items-center space-x-4">
+                {config.oficina.logo && (
+                  <img 
+                    src={config.oficina.logo} 
+                    alt="Logo" 
+                    className="w-16 h-16 object-contain border border-gray-200 rounded"
+                  />
+                )}
+                <div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUploadLogo}
+                    className="hidden"
+                    id="logo-upload"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('logo-upload')?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {config.oficina.logo ? 'Alterar Logo' : 'Upload Logo'}
+                  </Button>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Formatos: PNG, JPG, SVG (máx. 2MB)
+                  </p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Aparência e Temas */}
+      {activeTab === 'aparencia' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Palette className="h-5 w-5 mr-2" />
+                Temas do Sistema
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {temas.map((tema) => (
+                  <div
+                    key={tema.id}
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      tema.ativo 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => handleAtivarTema(tema.id)}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-gray-900">{tema.nome}</h4>
+                      <div className="flex items-center space-x-1">
+                        {tema.modo === 'dark' ? (
+                          <Moon className="h-4 w-4 text-gray-600" />
+                        ) : (
+                          <Sun className="h-4 w-4 text-yellow-500" />
+                        )}
+                        {tema.ativo && <Badge variant="success" size="sm">Ativo</Badge>}
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-2 mb-3">
+                      <div 
+                        className="w-6 h-6 rounded-full border border-gray-300"
+                        style={{ backgroundColor: tema.cores.primaria }}
+                        title="Cor Primária"
+                      />
+                      <div 
+                        className="w-6 h-6 rounded-full border border-gray-300"
+                        style={{ backgroundColor: tema.cores.secundaria }}
+                        title="Cor Secundária"
+                      />
+                      <div 
+                        className="w-6 h-6 rounded-full border border-gray-300"
+                        style={{ backgroundColor: tema.cores.sucesso }}
+                        title="Cor de Sucesso"
+                      />
+                      <div 
+                        className="w-6 h-6 rounded-full border border-gray-300"
+                        style={{ backgroundColor: tema.cores.fundo }}
+                        title="Cor de Fundo"
+                      />
+                    </div>
+                    
+                    <p className="text-xs text-gray-600">
+                      Clique para ativar este tema
+                    </p>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2">💡 Dica</h4>
+                <p className="text-sm text-blue-800">
+                  Você pode criar temas personalizados com suas próprias cores e logo. 
+                  Entre em contato com o suporte para mais informações.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de Interface</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Modo Escuro Automático</h4>
+                  <p className="text-sm text-gray-600">Alternar automaticamente baseado no horário</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Animações Reduzidas</h4>
+                  <p className="text-sm text-gray-600">Reduzir animações para melhor performance</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Densidade Compacta</h4>
+                  <p className="text-sm text-gray-600">Mostrar mais informações em menos espaço</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Notificações */}
