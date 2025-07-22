@@ -1,0 +1,111 @@
+For all designs I ask you to make, have them be beautiful, not cookie cutter. Make webpages that are fully featured and worthy for production.
+
+By default, this template supports JSX syntax with Tailwind CSS classes, React hooks, and Lucide React for icons. Do not install other packages for UI themes, icons, etc unless absolutely necessary or I request them.
+
+Use icons from lucide-react for logos.
+
+---
+
+## Project: MotoGestor – SaaS para Oficina de Motos
+
+### 1. Overview
+Build a multi-tenant, mobile-first web application for motorcycle workshops to manage:
+- Clientes & suas motos  
+- Ordens de Serviço com histórico e anexos (fotos, orçamentos)  
+- Usuários (admin vs funcionário) e permissões  
+- Relatórios de produtividade e faturamento  
+- Notificações por e-mail/WhatsApp (simuladas)  
+
+Backend: Firebase (Auth, Firestore, Storage, Functions).  
+Frontend: React (JSX + hooks), Tailwind CSS, lucide-react icons.
+
+### 2. Directory Structure (suggested)
+/src
+/components ← atomic, reusable UI pieces (buttons, cards, forms)
+/layouts ← page shells (DashboardLayout, AuthLayout)
+/pages ← route-based pages (Next.js style or React Router)
+/contexts ← AuthContext, ThemeContext, i18nContext
+/hooks ← custom React hooks (useAuth, useFirestoreQuery)
+/services ← wrappers for Firebase calls
+/utils ← helpers (formatDate, maskPhone)
+/styles ← global Tailwind overrides, base.css
+/icons ← any custom SVG wrapped in lucide-react
+/firebase
+firestore.rules ← security rules
+functions/ ← HTTP/email triggers (sendCompletionEmail)
+.gitignore
+tailwind.config.js
+package.json
+
+markdown
+Copiar
+Editar
+
+### 3. Core Pages & Features
+
+1. **Auth (Login / Signup)**
+   - Firebase Auth w/ email & password + reCAPTCHA
+   - “Forgot password” flow
+
+2. **Dashboard**
+   - Cards: Ordens em andamento, Faturamento do mês, Novos clientes
+   - Recentes 5 OS with status badges and “Ver detalhes” buttons
+
+3. **Clientes**
+   - List + filter/search
+   - “Novo Cliente” modal/form  
+   - Dentro do form: múltiplos campos de moto (modelo, placa, ano) com validação
+
+4. **Ordens de Serviço**
+   - CRUD: criar, editar, detalhar, atualizar status
+   - Geração de numeroOS único (Firestore function)
+   - Upload de fotos (Firebase Storage) e anexos PDF
+
+5. **Usuários**
+   - CRUD de usuários (admin pode tudo, funcionário só cria/atualiza OS)
+   - Perfil pessoal (nome, foto, contato)
+
+6. **Relatórios**
+   - Gráfico de faturamento mensal (chart.js ou recharts via React wrapper)
+   - Tabela de top 5 clientes por serviços
+   - Export CSV
+
+7. **Configurações & Extras**
+   - Tema claro/escuro (Tailwind + context)
+   - Internacionalização (pt-BR / en-US via i18nContext or Firebase Remote Config)
+   - Simulação de notificação WhatsApp (alert modal)
+   - PWA support (service worker, manifest)
+
+### 4. Development Guidelines
+
+- **Styling**:  
+  - Tailwind’s utility-first classes  
+  - Responsive (mobile-first) breakpoints  
+  - Accessible: WCAG AA contrast, ARIA labels, focus states  
+
+- **Code Quality**:  
+  - ESLint + Prettier  
+  - TypeScript recommended (or proptypes)  
+  - React Testing Library + Jest for critical flows  
+
+- **State & Data Fetching**:  
+  - React Query or SWR for Firestore reads  
+  - Context for Auth & Theme  
+
+- **Security**:  
+  - Firestore Rules by `customClaims`  
+  - Cloud Functions for sensitive logic (numeroOS, faturamento)  
+
+- **CI/CD**:  
+  - GitHub Actions: lint, test, deploy to Firebase Hosting  
+
+- **Performance**:  
+  - Code-splitting, lazy-load heavy components  
+  - Indexes on Firestore for paginated queries  
+
+### 5. Naming & Consistency
+
+- File names & components in PascalCase  
+- Hooks prefixed `use` (e.g. `useClienteForm`)  
+- Services grouped by feature (`clienteService.ts`)  
+- Consistent spacing, semicolons per ESLint config
