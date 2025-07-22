@@ -309,118 +309,225 @@ const Clientes: React.FC = () => {
       {/* Dashboard de Clientes */}
       {showDashboard && dashboardData && (
         <div className="space-y-6">
-          {/* Filtros do Dashboard */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center space-x-2">
-                  <Filter className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-medium">Filtros:</span>
+          {/* Filtros Inteligentes do Dashboard */}
+          <Card variant="elevated">
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Filter className="h-5 w-5 mr-2 text-blue-600" />
+                Análise Inteligente de Clientes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">📅 Período de Análise</label>
+                  <select
+                    value={filtros.periodo}
+                    onChange={(e) => {
+                      setFiltros(prev => ({ ...prev, periodo: e.target.value }));
+                      loadDashboardData();
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option value="7">📊 Últimos 7 dias</option>
+                    <option value="30">📈 Últimos 30 dias</option>
+                    <option value="90">📉 Últimos 90 dias</option>
+                    <option value="365">🗓️ Último ano</option>
+                  </select>
                 </div>
-                <Select
-                  value={filtros.periodo}
-                  onChange={(e) => setFiltros(prev => ({ ...prev, periodo: e.target.value }))}
-                  options={[
-                    { value: '7', label: 'Últimos 7 dias' },
-                    { value: '30', label: 'Últimos 30 dias' },
-                    { value: '90', label: 'Últimos 90 dias' },
-                    { value: '365', label: 'Último ano' }
-                  ]}
-                  className="w-40"
-                />
-                <Select
-                  value={filtros.tipoServico}
-                  onChange={(e) => setFiltros(prev => ({ ...prev, tipoServico: e.target.value }))}
-                  options={[
-                    { value: 'todos', label: 'Todos os Serviços' },
-                    { value: 'manutencao', label: 'Manutenção' },
-                    { value: 'revisao', label: 'Revisão' },
-                    { value: 'reparo', label: 'Reparo' }
-                  ]}
-                  className="w-40"
-                />
-                <Button variant="outline" size="sm" onClick={loadDashboardData}>
-                  Atualizar
-                </Button>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">🔧 Tipo de Serviço</label>
+                  <select
+                    value={filtros.tipoServico}
+                    onChange={(e) => {
+                      setFiltros(prev => ({ ...prev, tipoServico: e.target.value }));
+                      loadDashboardData();
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option value="todos">🔧 Todos os Serviços</option>
+                    <option value="manutencao">⚙️ Manutenção</option>
+                    <option value="revisao">🔍 Revisão</option>
+                    <option value="reparo">🛠️ Reparo</option>
+                    <option value="emergencia">🚨 Emergência</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">👥 Status do Cliente</label>
+                  <select
+                    value={filtros.statusCliente}
+                    onChange={(e) => {
+                      setFiltros(prev => ({ ...prev, statusCliente: e.target.value }));
+                      loadDashboardData();
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option value="todos">👥 Todos os Clientes</option>
+                    <option value="novos">✨ Novos (30 dias)</option>
+                    <option value="ativos">🔥 Ativos</option>
+                    <option value="inativos">😴 Inativos (90+ dias)</option>
+                    <option value="vip">⭐ VIP (5+ serviços)</option>
+                  </select>
+                </div>
+                
+                <div className="flex flex-col justify-end">
+                  <Button 
+                    onClick={loadDashboardData}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2 px-4 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+                  >
+                    🔄 Atualizar Análise
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Insights Rápidos */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
+                <div className="flex items-center mb-2">
+                  <TrendingUp className="h-4 w-4 text-blue-600 mr-2" />
+                  <span className="text-sm font-medium text-blue-800">💡 Insights Inteligentes</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                  <div className="bg-white rounded p-2 border border-blue-100">
+                    <span className="font-medium text-green-700">📈 Crescimento:</span>
+                    <span className="text-gray-600 ml-1">+{dashboardData.crescimentoMensal}% novos clientes</span>
+                  </div>
+                  <div className="bg-white rounded p-2 border border-blue-100">
+                    <span className="font-medium text-blue-700">🎯 Retenção:</span>
+                    <span className="text-gray-600 ml-1">{dashboardData.taxaRetorno}% retornam</span>
+                  </div>
+                  <div className="bg-white rounded p-2 border border-blue-100">
+                    <span className="font-medium text-purple-700">💰 Ticket Médio:</span>
+                    <span className="text-gray-600 ml-1">{formatCurrency(dashboardData.ticketMedio)}</span>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Métricas Principais */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-blue-600">{dashboardData.novosClientes}</div>
-                <div className="text-sm text-gray-600">Novos Clientes</div>
-                <div className="text-xs text-green-600 mt-1">
-                  +{dashboardData.crescimentoMensal}% vs mês anterior
+          {/* Métricas Principais com Cards Melhorados */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card variant="elevated" className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+              <CardContent className="p-6 text-center bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="p-3 bg-blue-500 rounded-full">
+                    <UserPlus className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-blue-700 mb-1">{dashboardData.novosClientes}</div>
+                <div className="text-sm font-medium text-blue-600 mb-2">Novos Clientes</div>
+                <div className="flex items-center justify-center text-xs">
+                  <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+                  <span className="text-green-600 font-medium">+{dashboardData.crescimentoMensal}%</span>
+                  <span className="text-gray-500 ml-1">vs período anterior</span>
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">{dashboardData.taxaRetorno}%</div>
-                <div className="text-sm text-gray-600">Taxa de Retorno</div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {dashboardData.totalClientes} clientes totais
+            <Card variant="elevated" className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+              <CardContent className="p-6 text-center bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="p-3 bg-green-500 rounded-full">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-green-700 mb-1">{dashboardData.taxaRetorno}%</div>
+                <div className="text-sm font-medium text-green-600 mb-2">Taxa de Retorno</div>
+                <div className="text-xs text-gray-600">
+                  <span className="font-medium">{dashboardData.totalClientes}</span> clientes totais
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-purple-600">{dashboardData.tempoMedioRetorno}</div>
-                <div className="text-sm text-gray-600">Dias Médio Retorno</div>
-                <div className="text-xs text-gray-500 mt-1">
-                  Entre visitas
+            <Card variant="elevated" className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+              <CardContent className="p-6 text-center bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="p-3 bg-purple-500 rounded-full">
+                    <Clock className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-purple-700 mb-1">{dashboardData.tempoMedioRetorno}</div>
+                <div className="text-sm font-medium text-purple-600 mb-2">Dias Médio Retorno</div>
+                <div className="text-xs text-gray-600">
+                  Intervalo entre visitas
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-orange-600">
+            <Card variant="elevated" className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+              <CardContent className="p-6 text-center bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="p-3 bg-orange-500 rounded-full">
+                    <DollarSign className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-orange-700 mb-1">
                   {formatCurrency(dashboardData.ticketMedio)}
                 </div>
-                <div className="text-sm text-gray-600">Ticket Médio</div>
-                <div className="text-xs text-gray-500 mt-1">
-                  Por serviço
+                <div className="text-sm font-medium text-orange-600 mb-2">Ticket Médio</div>
+                <div className="text-xs text-gray-600">
+                  Valor médio por serviço
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Gráfico de Serviços por Tipo */}
-          <Card>
+          {/* Gráfico de Serviços por Tipo Melhorado */}
+          <Card variant="elevated">
             <CardHeader>
-              <CardTitle>Distribuição por Tipo de Serviço</CardTitle>
+              <CardTitle className="flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
+                📊 Distribuição por Tipo de Serviço
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="p-6">
+              <div className="space-y-4">
                 {Object.entries(dashboardData.clientesPorTipoServico).map(([tipo, quantidade]) => {
                   const total = Object.values(dashboardData.clientesPorTipoServico).reduce((a: any, b: any) => a + b, 0);
                   const porcentagem = Math.round((quantidade as number / total) * 100);
                   
+                  const tipoIcons: { [key: string]: string } = {
+                    'Manutenção': '🔧',
+                    'Freios': '🛑',
+                    'Revisão': '🔍',
+                    'Outros': '⚙️'
+                  };
+                  
                   return (
-                    <div key={tipo} className="flex items-center justify-between">
+                    <div key={tipo} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                       <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                        <span className="text-sm font-medium">{tipo}</span>
+                        <span className="text-lg">{tipoIcons[tipo] || '⚙️'}</span>
+                        <span className="text-sm font-medium text-gray-800">{tipo}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-3 shadow-inner">
                           <div 
-                            className="bg-blue-500 h-2 rounded-full" 
+                            className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full shadow-sm transition-all duration-500" 
                             style={{ width: `${porcentagem}%` }}
                           ></div>
                         </div>
-                        <span className="text-sm text-gray-600 w-12">{porcentagem}%</span>
-                        <span className="text-sm font-medium w-8">({quantidade})</span>
+                        <span className="text-sm font-medium text-blue-600 w-12">{porcentagem}%</span>
+                        <span className="text-sm font-bold text-gray-700 w-12">({quantidade})</span>
                       </div>
                     </div>
                   );
                 })}
+              </div>
+              
+              {/* Ações Rápidas */}
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" className="text-xs">
+                    📈 Exportar Relatório
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-xs">
+                    📧 Enviar por Email
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-xs">
+                    🔄 Agendar Relatório
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
