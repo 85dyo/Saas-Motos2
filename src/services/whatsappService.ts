@@ -62,7 +62,7 @@ Digite uma das opções acima ou descreva o que precisa.`;
     
     if (cliente.motos.length === 1) {
       const moto = cliente.motos[0];
-      const relatorio = await HistoricoService.gerarRelatorioMedico(moto.id);
+      const relatorio = await HistoricoService.gerarRelatorioManutencao(moto.id);
       
       return this.formatarHistoricoCompleto(moto, relatorio);
     }
@@ -82,7 +82,7 @@ Digite uma das opções acima ou descreva o que precisa.`;
   private static formatarHistoricoCompleto(moto: Moto, relatorio: any): string {
     let resposta = `🏍️ *${moto.modelo} - ${moto.placa}*\n\n`;
     
-    resposta += `📋 *Resumo Médico:*\n${relatorio.resumo}\n\n`;
+    resposta += `📋 *Resumo de Manutenção:*\n${relatorio.resumo}\n\n`;
     
     if (relatorio.historico.length > 0) {
       resposta += `🔧 *Últimos Serviços:*\n`;

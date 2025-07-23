@@ -233,7 +233,7 @@ export class EvolutionApiService {
   }
 
   // Enviar histórico médico por WhatsApp
-  static async enviarHistoricoMedico(cliente: Cliente, motoId: string, pdfBlob: Blob): Promise<boolean> {
+  static async enviarHistoricoManutencao(cliente: Cliente, motoId: string, pdfBlob: Blob): Promise<boolean> {
     this.loadConfig();
     
     if (!this.config.apiKey || !this.config.baseUrl) {
@@ -254,7 +254,7 @@ export class EvolutionApiService {
       const oficinaNome = config.oficina?.nome || 'MotoGestor';
       const oficinaTelefone = config.oficina?.telefone || '(11) 99999-9999';
       
-      const caption = `🏍️ *Histórico Médico - ${moto.modelo}*\n\n` +
+      const caption = `🏍️ *Histórico de Manutenção - ${moto.modelo}*\n\n` +
                      `Olá ${cliente.nome}!\n\n` +
                      `Segue o histórico completo da sua ${moto.modelo} (${moto.placa}).\n\n` +
                      `📋 Documento gerado em: ${new Date().toLocaleDateString('pt-BR')}\n\n` +
@@ -264,7 +264,7 @@ export class EvolutionApiService {
 
       return await this.enviarDocumento(numero, file, caption);
     } catch (error) {
-      console.error('Erro ao enviar histórico médico:', error);
+      console.error('Erro ao enviar histórico de manutenção:', error);
       return false;
     }
   }

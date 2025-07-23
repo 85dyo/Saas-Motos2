@@ -219,6 +219,7 @@ export class DataService {
     const index = ordens.findIndex(os => os.id === id);
     if (index === -1) throw new Error('Ordem de serviço não encontrada');
     
+    const osOriginal = ordens[index];
     const updatedOS = { 
       ...ordens[index], 
       ...updates, 
@@ -231,6 +232,9 @@ export class DataService {
     }
     if (updates.status === 'concluido' && ordens[index].status === 'em_andamento') {
       updatedOS.dataConclusao = new Date();
+      
+      // Integrar com histórico de manutenção quando OS for concluída
+      await this.adicionarAoHistoricoManutencao(updatedOS);
     }
 
     ordens[index] = updatedOS;
@@ -238,6 +242,128 @@ export class DataService {
     return updatedOS;
   }
 
+  // Adicionar serviço concluído ao histórico de manutenção
+  private static async adicionarAoHistoricoManutencao(os: OrdemServico): Promise<void> {
+    try {
+      const { HistoricoService } = await import('./historicoService');
+      
+      // Simular dados que não estão na OS mas são necessários para o histórico
+      const quilometragemAtual = Math.floor(Math.random() * 50000) + 10000; // Simulado
+      const mecanicoResponsavel = 'Mecânico da Oficina'; // Em produção, viria do usuário logado
+      
+      // Determinar tipo de serviço baseado na descrição
+      const descricaoLower = os.descricao.toLowerCase();
+      let tipoServico: 'preventiva' | 'corretiva' | 'revisao' | 'emergencia' = 'corretiva';
+      
+      if (descricaoLower.includes('revisão') || descricaoLower.includes('revisao')) {
+        tipoServico = 'revisao';
+      } else if (descricaoLower.includes('troca') || descricaoLower.includes('óleo') || 
+                 descricaoLower.includes('oleo') || descricaoLower.includes('filtro') ||
+                 descricaoLower.includes('preventiv')) {
+        tipoServico = 'preventiva';
+      } else if (descricaoLower.includes('emergência') || descricaoLower.includes('emergencia') ||
+                 descricaoLower.includes('socorro')) {
+        tipoServico = 'emergencia';
+      }
+      
+      // Simular peças trocadas baseado na descrição
+      const pecasTrocadas = this.extrairPecasDaDescricao(os.descricao, os.valor);
+      
+      // Calcular próxima revisão baseada no tipo de serviço
+      const proximaRevisao = this.calcularProximaRevisao(tipoServico, quilometragemAtual);
+      
+      const historicoData = {
+        osId: os.id,
+        motoId: os.motoId,
+        data: os.dataConclusao || new Date(),
+        quilometragem: quilometragemAtual,
+        tipoServico,
+        descricao: os.descricao,
+        pecasTrocadas,
+        valor: os.valor,
+        mecanico: mecanicoResponsavel,
+        proximaRevisao,
+        observacoes: os.observacoes,
+        fotos: os.fotos || []
+      };
+      
+      await HistoricoService.adicionarHistorico(historicoData);
+    } catch (error) {
+      console.error('Erro ao adicionar ao histórico de manutenção:', error);
+    }
+  }
+  
+  // Extrair peças da descrição do serviço
+  private static extrairPecasDaDescricao(descricao: string, valorTotal: number): any[] {
+    const pecas: any[] = [];
+    const descricaoLower = descricao.toLowerCase();
+    
+    // Mapear palavras-chave para peças comuns
+    const mapeamentoPecas = [
+      { palavras: ['óleo', 'oleo'], nome: 'Óleo do Motor', valor: 45.00 },
+      { palavras: ['filtro óleo', 'filtro oleo'], nome: 'Filtro de Óleo', valor: 25.00 },
+      { palavras: ['filtro ar'], nome: 'Filtro de Ar', valor: 35.00 },
+      { palavras: ['vela', 'velas'], nome: 'Velas de Ignição', valor: 60.00 },
+      { palavras: ['pastilha', 'pastilhas', 'freio'], nome: 'Pastilhas de Freio', valor: 80.00 },
+      { palavras: ['corrente'], nome: 'Corrente de Transmissão', valor: 120.00 },
+      { palavras: ['pneu'], nome: 'Pneu', valor: 200.00 }
+    ];
+    
+    mapeamentoPecas.forEach((item, index) => {
+      const encontrou = item.palavras.some(palavra => descricaoLower.includes(palavra));
+      if (encontrou) {
+        pecas.push({
+          id: `peca_${index}_${Date.now()}`,
+          nome: item.nome,
+          codigo: `PC${String(index + 1).padStart(3, '0')}`,
+          marca: 'Original',
+          valor: item.valor,
+          garantia: {
+            meses: item.nome.includes('Óleo') ? 6 : 12,
+            quilometragem: item.nome.includes('Óleo') ? 3000 : 10000
+          }
+        });
+      }
+    });
+    
+    // Se não encontrou peças específicas, criar uma genérica
+    if (pecas.length === 0) {
+      pecas.push({
+        id: `peca_generica_${Date.now()}`,
+        nome: 'Serviços e Peças Diversas',
+        codigo: 'SRV001',
+        marca: 'Diversos',
+        valor: valorTotal * 0.6, // Assumir que 60% do valor são peças
+        garantia: {
+          meses: 6,
+          quilometragem: 5000
+        }
+      });
+    }
+    
+    return pecas;
+  }
+  
+  // Calcular próxima revisão baseada no tipo de serviço
+  private static calcularProximaRevisao(tipoServico: string, quilometragemAtual: number): any {
+    const intervalos = {
+      'preventiva': { km: 3000, meses: 6 },
+      'revisao': { km: 6000, meses: 12 },
+      'corretiva': { km: 5000, meses: 8 },
+      'emergencia': { km: 1000, meses: 3 }
+    };
+    
+    const intervalo = intervalos[tipoServico as keyof typeof intervalos] || intervalos.corretiva;
+    
+    const proximaData = new Date();
+    proximaData.setMonth(proximaData.getMonth() + intervalo.meses);
+    
+    return {
+      data: proximaData,
+      quilometragem: quilometragemAtual + intervalo.km,
+      tipo: `Próxima ${tipoServico === 'preventiva' ? 'Manutenção Preventiva' : 'Revisão'}`
+    };
+  }
   // Dashboard methods
   static async getDashboardMetrics(): Promise<DashboardMetrics> {
     await new Promise(resolve => setTimeout(resolve, 400));

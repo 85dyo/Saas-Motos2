@@ -13,15 +13,15 @@ interface OficinaInfo {
 
 export class PDFService {
   // Gerar PDF do histórico médico
-  static async gerarHistoricoMedico(
+  static async gerarHistoricoManutencao(
     cliente: Cliente, 
     moto: Moto, 
     historico: HistoricoServico[], 
     alertas: AlertaManutencao[],
     oficinaInfo?: OficinaInfo,
-    documentTitle: string = 'Relatório de Manutenção'
+    documentTitle: string = 'Histórico de Manutenção da Motocicleta'
   ): Promise<Blob> {
-    const htmlContent = this.gerarHTMLHistorico(cliente, moto, historico, alertas, oficinaInfo, documentTitle);
+    const htmlContent = this.gerarHTMLManutencao(cliente, moto, historico, alertas, oficinaInfo, documentTitle);
     
     // Criar elemento temporário para renderizar o HTML
     const tempDiv = document.createElement('div');
@@ -66,13 +66,13 @@ export class PDFService {
     }
   }
 
-  private static gerarHTMLHistorico(
+  private static gerarHTMLManutencao(
     cliente: Cliente, 
     moto: Moto, 
     historico: HistoricoServico[], 
     alertas: AlertaManutencao[],
     oficinaInfo?: OficinaInfo,
-    documentTitle: string = 'Relatório de Manutenção'
+    documentTitle: string = 'Histórico de Manutenção da Motocicleta'
   ): string {
     const totalInvestido = historico.reduce((sum, h) => sum + h.valor, 0);
     const ultimoServico = historico[0];
@@ -361,7 +361,7 @@ export class PDFService {
         <div class="section">
           <div class="section-title">
             <span class="section-icon">📋</span>
-            Histórico de Serviços
+            Histórico de Manutenção e Serviços
           </div>
           <div class="timeline">
           ${historico.length > 0 ? historico.map((servico, index) => `
@@ -431,11 +431,11 @@ export class PDFService {
       // Simulação de envio por email - integraria com serviço real
       const formData = new FormData();
       formData.append('to', cliente.email || '');
-      formData.append('subject', `Histórico Médico - ${moto.modelo} (${moto.placa})`);
+      formData.append('subject', `Histórico de Manutenção - ${moto.modelo} (${moto.placa})`);
       formData.append('body', `
         Olá ${cliente.nome},
 
-        Segue em anexo o histórico médico completo da sua ${moto.modelo} (${moto.placa}).
+        Segue em anexo o histórico de manutenção completo da sua ${moto.modelo} (${moto.placa}).
 
         Este documento contém todos os serviços realizados, peças trocadas e recomendações para manutenções futuras.
 

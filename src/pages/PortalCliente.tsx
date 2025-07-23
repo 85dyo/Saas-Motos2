@@ -94,18 +94,18 @@ const PortalCliente: React.FC = () => {
         logo: config.oficina?.logo
       };
       
-      const pdfBlob = await PDFService.gerarHistoricoMedico(
+      const pdfBlob = await PDFService.gerarHistoricoManutencao(
         cliente, 
         moto, 
         historico, 
         alertasMoto, 
         oficinaInfo,
-        'Relatório de Manutenção da Motocicleta'
+        'Histórico de Manutenção da Motocicleta'
       );
       PDFService.downloadPDF(pdfBlob, `historico-${moto.placa}.pdf`);
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      alert('Erro ao gerar PDF do histórico');
+      alert('Erro ao gerar PDF do histórico de manutenção');
     }
   };
 
@@ -129,24 +129,24 @@ const PortalCliente: React.FC = () => {
         logo: config.oficina?.logo
       };
       
-      const pdfBlob = await PDFService.gerarHistoricoMedico(
+      const pdfBlob = await PDFService.gerarHistoricoManutencao(
         cliente, 
         moto, 
         historico, 
         alertasMoto, 
         oficinaInfo,
-        'Relatório de Manutenção da Motocicleta'
+        'Histórico de Manutenção da Motocicleta'
       );
       const sucesso = await PDFService.enviarPorEmail(cliente, moto, pdfBlob, oficinaInfo);
       
       if (sucesso) {
-        alert('Histórico enviado por email com sucesso!');
+        alert('Histórico de manutenção enviado por email com sucesso!');
       } else {
         alert('Erro ao enviar email');
       }
     } catch (error) {
       console.error('Erro ao enviar por email:', error);
-      alert('Erro ao enviar histórico por email');
+      alert('Erro ao enviar histórico de manutenção por email');
     }
   };
 
@@ -167,24 +167,24 @@ const PortalCliente: React.FC = () => {
         logo: config.oficina?.logo
       };
       
-      const pdfBlob = await PDFService.gerarHistoricoMedico(
+      const pdfBlob = await PDFService.gerarHistoricoManutencao(
         cliente, 
         moto, 
         historico, 
         alertasMoto, 
         oficinaInfo,
-        'Relatório de Manutenção da Motocicleta'
+        'Histórico de Manutenção da Motocicleta'
       );
-      const sucesso = await EvolutionApiService.enviarHistoricoMedico(cliente, moto.id, pdfBlob);
+      const sucesso = await EvolutionApiService.enviarHistoricoManutencao(cliente, moto.id, pdfBlob);
       
       if (sucesso) {
-        alert('Histórico enviado via WhatsApp!');
+        alert('Histórico de manutenção enviado via WhatsApp!');
       } else {
         alert('Erro ao enviar WhatsApp');
       }
     } catch (error) {
       console.error('Erro ao enviar WhatsApp:', error);
-      alert('Erro ao enviar histórico via WhatsApp');
+      alert('Erro ao enviar histórico de manutenção via WhatsApp');
     }
   };
 
@@ -275,7 +275,7 @@ const PortalCliente: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {cliente.motos.map((moto) => (
                   <button
-                    key={moto.id}
+                  🏍️ Histórico de Manutenção - {motoAtual.modelo} ({motoAtual.placa})
                     onClick={() => setMotoSelecionada(moto.id)}
                     className={`p-3 rounded-lg border text-left transition-colors ${
                       motoSelecionada === moto.id

@@ -196,7 +196,7 @@ export class HistoricoService {
   }
 
   // Relatório Médico da Moto
-  static async gerarRelatorioMedico(motoId: string): Promise<{
+  static async gerarRelatorioManutencao(motoId: string): Promise<{
     resumo: string;
     historico: HistoricoServico[];
     alertas: AlertaManutencao[];
@@ -213,7 +213,7 @@ export class HistoricoService {
     
     const alertasMoto = alertas.filter(a => a.motoId === motoId);
     
-    const resumo = this.gerarResumoMedico(historico, alertasMoto);
+    const resumo = this.gerarResumoManutencao(historico, alertasMoto);
     
     const proximasManutencoes = alertasMoto.map(alerta => ({
       tipo: alerta.titulo,
@@ -230,7 +230,7 @@ export class HistoricoService {
     };
   }
 
-  private static gerarResumoMedico(historico: HistoricoServico[], alertas: AlertaManutencao[]): string {
+  private static gerarResumoManutencao(historico: HistoricoServico[], alertas: AlertaManutencao[]): string {
     const totalServicos = historico.length;
     const valorTotal = historico.reduce((sum, h) => sum + h.valor, 0);
     const ultimoServico = historico[0];

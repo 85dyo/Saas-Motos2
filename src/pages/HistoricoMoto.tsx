@@ -61,9 +61,9 @@ const HistoricoMoto: React.FC = () => {
     if (!cliente || !moto) return;
 
     try {
-      const relatorio = await HistoricoService.gerarRelatorioMedico(moto.id);
+      const relatorio = await HistoricoService.gerarRelatorioManutencao(moto.id);
       // Simular envio via WhatsApp
-      alert('Histórico enviado via WhatsApp para o cliente!');
+      alert('Histórico de manutenção enviado via WhatsApp para o cliente!');
     } catch (error) {
       console.error('Erro ao enviar WhatsApp:', error);
     }
@@ -73,8 +73,8 @@ const HistoricoMoto: React.FC = () => {
     if (!cliente) return;
 
     try {
-      const historico = historicos[moto.id] || [];
-      const alertasMoto = alertas[moto.id] || [];
+      const historicoMoto = historico || [];
+      const alertasMoto = alertas || [];
       
       // Obter configurações da oficina
       const config = JSON.parse(localStorage.getItem('motogestor_config') || '{}');
@@ -86,18 +86,18 @@ const HistoricoMoto: React.FC = () => {
         logo: config.oficina?.logo
       };
       
-      const pdfBlob = await PDFService.gerarHistoricoMedico(
+      const pdfBlob = await PDFService.gerarHistoricoManutencao(
         cliente, 
         moto, 
-        historico, 
+        historicoMoto, 
         alertasMoto, 
         oficinaInfo,
-        'Relatório de Manutenção'
+        'Relatório de Manutenção da Motocicleta'
       );
       PDFService.downloadPDF(pdfBlob, `historico-${moto.placa}.pdf`);
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      alert('Erro ao gerar PDF do histórico');
+      alert('Erro ao gerar PDF do histórico de manutenção');
     }
   };
 
@@ -162,7 +162,7 @@ const HistoricoMoto: React.FC = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Histórico Médico - {moto.modelo}
+              Histórico de Manutenção - {moto.modelo}
             </h1>
             <p className="text-gray-600">
               {cliente.nome} • {moto.placa} • {moto.ano}
