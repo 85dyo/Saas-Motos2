@@ -102,6 +102,35 @@ export class DataService {
   static async createCliente(clienteData: Omit<Cliente, 'id' | 'createdAt' | 'updatedAt'>): Promise<Cliente> {
     await new Promise(resolve => setTimeout(resolve, 500));
     const clientes = this.getClientes();
+    
+    // Verificar duplicidade por CPF, telefone ou email
+    const duplicateErrors: string[] = [];
+    
+    if (clienteData.cpf) {
+      const cpfExists = clientes.find(c => c.cpf === clienteData.cpf);
+      if (cpfExists) {
+        duplicateErrors.push(`CPF ${clienteData.cpf} já está cadastrado para o cliente ${cpfExists.nome}`);
+      }
+    }
+    
+    if (clienteData.telefone) {
+      const phoneExists = clientes.find(c => c.telefone === clienteData.telefone);
+      if (phoneExists) {
+        duplicateErrors.push(`Telefone ${clienteData.telefone} já está cadastrado para o cliente ${phoneExists.nome}`);
+      }
+    }
+    
+    if (clienteData.email) {
+      const emailExists = clientes.find(c => c.email === clienteData.email);
+      if (emailExists) {
+        duplicateErrors.push(`Email ${clienteData.email} já está cadastrado para o cliente ${emailExists.nome}`);
+      }
+    }
+    
+    if (duplicateErrors.length > 0) {
+      throw new Error(duplicateErrors.join('. '));
+    }
+    
     const newCliente: Cliente = {
       ...clienteData,
       id: generateId(),

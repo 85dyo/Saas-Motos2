@@ -677,9 +677,55 @@ const Configuracoes: React.FC = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle>Configurações de IA</CardTitle>
+              <CardTitle>Inteligência Artificial</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Provedor de IA</label>
+                <select
+                  value={config.integracao.aiProvider || 'none'}
+                  onChange={(e) => setConfig(prev => ({
+                    ...prev,
+                    integracao: { ...prev.integracao, aiProvider: e.target.value as any }
+                  }))}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="none">Nenhum (Desabilitado)</option>
+                  <option value="openai">OpenAI (GPT-4, GPT-3.5)</option>
+                  <option value="anthropic">Anthropic (Claude)</option>
+                  <option value="google">Google (Gemini)</option>
+                  <option value="grok">Grok (xAI)</option>
+                  <option value="llama">Meta Llama</option>
+                </select>
+              </div>
+              
+              {config.integracao.aiProvider && config.integracao.aiProvider !== 'none' && (
+                <>
+                  <Input
+                    label="API Key"
+                    type="password"
+                    value={config.integracao.aiApiKey || ''}
+                    onChange={(e) => setConfig(prev => ({
+                      ...prev,
+                      integracao: { ...prev.integracao, aiApiKey: e.target.value }
+                    }))}
+                    placeholder="Insira sua chave da API"
+                    helper="Mantenha sua chave segura. Ela será usada para análises inteligentes."
+                  />
+                  
+                  <Input
+                    label="Modelo (Opcional)"
+                    value={config.integracao.aiModel || ''}
+                    onChange={(e) => setConfig(prev => ({
+                      ...prev,
+                      integracao: { ...prev.integracao, aiModel: e.target.value }
+                    }))}
+                    placeholder="Ex: gpt-4, claude-3-sonnet, gemini-pro"
+                    helper="Deixe em branco para usar o modelo padrão"
+                  />
+                </>
+              )}
+              
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-medium">Análise Inteligente de Risco</h4>
@@ -693,6 +739,7 @@ const Configuracoes: React.FC = () => {
                       ...prev,
                       integracao: { ...prev.integracao, analiseIA: e.target.checked }
                     }))}
+                    disabled={!config.integracao.aiProvider || config.integracao.aiProvider === 'none'}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -712,11 +759,25 @@ const Configuracoes: React.FC = () => {
                       ...prev,
                       integracao: { ...prev.integracao, alertasPreditivos: e.target.checked }
                     }))}
+                    disabled={!config.integracao.aiProvider || config.integracao.aiProvider === 'none'}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                 </label>
               </div>
+              
+              {config.integracao.aiProvider && config.integracao.aiProvider !== 'none' && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">🤖 Recursos de IA Disponíveis</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• Análise inteligente de padrões de manutenção</li>
+                    <li>• Previsão de falhas baseada no histórico</li>
+                    <li>• Recomendações personalizadas por modelo de moto</li>
+                    <li>• Otimização de intervalos de manutenção</li>
+                    <li>• Alertas preditivos avançados</li>
+                  </ul>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -1,5 +1,15 @@
 import { Cliente, Moto, HistoricoServico, AlertaManutencao } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+
+interface OficinaInfo {
+  nome: string;
+  endereco?: string;
+  telefone?: string;
+  email?: string;
+  logo?: string;
+}
 
 export class PDFService {
   // Gerar PDF do histórico médico
@@ -7,25 +17,73 @@ export class PDFService {
     cliente: Cliente, 
     moto: Moto, 
     historico: HistoricoServico[], 
-    alertas: AlertaManutencao[]
+    alertas: AlertaManutencao[],
+    oficinaInfo?: OficinaInfo
   ): Promise<Blob> {
-    // Simulação de geração de PDF - em produção usaria jsPDF ou similar
-    const htmlContent = this.gerarHTMLHistorico(cliente, moto, historico, alertas);
+    const htmlContent = this.gerarHTMLHistorico(cliente, moto, historico, alertas, oficinaInfo);
     
-    // Converter HTML para PDF (simulado)
-    const pdfBlob = new Blob([htmlContent], { type: 'application/pdf' });
+    // Criar elemento temporário para renderizar o HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.width = '210mm'; // A4 width
+    document.body.appendChild(tempDiv);
     
-    return pdfBlob;
+    try {
+      // Converter HTML para canvas
+      const canvas = await html2canvas(tempDiv, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true
+      });
+      
+      // Criar PDF
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 210;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      const pdfBlob = pdf.output('blob');
+      return pdfBlob;
+    } finally {
+      // Remover elemento temporário
+      document.body.removeChild(tempDiv);
+    }
   }
 
   private static gerarHTMLHistorico(
     cliente: Cliente, 
     moto: Moto, 
     historico: HistoricoServico[], 
-    alertas: AlertaManutencao[]
+    alertas: AlertaManutencao[],
+    oficinaInfo?: OficinaInfo
   ): string {
     const totalInvestido = historico.reduce((sum, h) => sum + h.valor, 0);
     const ultimoServico = historico[0];
+    const servicosPreventivos = historico.filter(h => h.tipoServico === 'preventiva').length;
+    const servicosCorretivos = historico.filter(h => h.tipoServico === 'corretiva').length;
+    
+    // Usar informações da oficina ou valores padrão
+    const oficina = oficinaInfo || {
+      nome: 'MotoGestor',
+      endereco: 'Sistema de Gestão para Oficinas',
+      telefone: '(11) 99999-9999',
+      email: 'contato@motogestor.com'
+    };
     
     return `
       <!DOCTYPE html>
@@ -51,6 +109,51 @@ export class PDFService {
           <p>Proprietário: ${cliente.nome}</p>
           <p>Gerado em: ${formatDate(new Date())}</p>
         </div>
+          .logo {
+            max-width: 150px;
+            max-height: 80px;
+            margin-bottom: 15px;
+          }
+          .oficina-info {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+          ${oficina.logo ? `<img src="${oficina.logo}" alt="Logo" class="logo">` : ''}
+          <h1>${oficina.nome}</h1>
+          <div class="oficina-info">
+            ${oficina.endereco ? `<div>${oficina.endereco}</div>` : ''}
+            <div>
+              ${oficina.telefone ? `Tel: ${oficina.telefone}` : ''}
+              ${oficina.telefone && oficina.email ? ' | ' : ''}
+              ${oficina.email ? `Email: ${oficina.email}` : ''}
+            </div>
+          </div>
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+          <p><strong>Telefone:</strong> ${cliente.telefone}</p>
+          ${cliente.email ? `<p><strong>Email:</strong> ${cliente.email}</p>` : ''}
+            color: #64748b;
+          }
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">${historico.length}</div>
+            <div class="stat-label">Total de Serviços</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${formatCurrency(totalInvestido)}</div>
+            <div class="stat-label">Investimento Total</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${servicosPreventivos}</div>
+            <div class="stat-label">Preventivos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${servicosCorretivos}</div>
+            <div class="stat-label">Corretivos</div>
+          </div>
+        </div>
 
         <div class="summary">
           <h3>Resumo Geral</h3>
@@ -59,11 +162,13 @@ export class PDFService {
               <strong>Total de Serviços:</strong> ${historico.length}<br>
               <strong>Investimento Total:</strong> ${formatCurrency(totalInvestido)}<br>
               <strong>Último Serviço:</strong> ${ultimoServico ? formatDate(ultimoServico.data) : 'Nenhum'}
+              ${ultimoServico ? `<br><strong>Quilometragem Atual:</strong> ${ultimoServico.quilometragem.toLocaleString()}km` : ''}
             </div>
             <div>
-              <strong>Serviços Preventivos:</strong> ${historico.filter(h => h.tipoServico === 'preventiva').length}<br>
-              <strong>Serviços Corretivos:</strong> ${historico.filter(h => h.tipoServico === 'corretiva').length}<br>
+              <strong>Serviços Preventivos:</strong> ${servicosPreventivos}<br>
+              <strong>Serviços Corretivos:</strong> ${servicosCorretivos}<br>
               <strong>Alertas Ativos:</strong> ${alertas.length}
+              ${ultimoServico ? `<br><strong>Dias desde último serviço:</strong> ${Math.floor((new Date().getTime() - new Date(ultimoServico.data).getTime()) / (1000 * 60 * 60 * 24))}` : ''}
             </div>
           </div>
         </div>
@@ -75,7 +180,8 @@ export class PDFService {
               <div class="alert">
                 <strong>${alerta.titulo}</strong><br>
                 ${alerta.descricao}<br>
-                <small>Vencimento: ${formatDate(alerta.dataVencimento)}</small>
+                <small><strong>Vencimento:</strong> ${formatDate(alerta.dataVencimento)}</small>
+                ${alerta.quilometragemVencimento ? `<br><small><strong>Quilometragem:</strong> ${alerta.quilometragemVencimento.toLocaleString()}km</small>` : ''}
               </div>
             `).join('')}
           </div>
@@ -83,39 +189,46 @@ export class PDFService {
 
         <div class="timeline">
           <h3>📋 Histórico de Serviços</h3>
-          ${historico.map(servico => `
+          ${historico.length > 0 ? historico.map((servico, index) => `
             <div class="service-item">
-              <h4>${servico.descricao}</h4>
+              <h4>#${historico.length - index} - ${servico.descricao}</h4>
               <p><strong>Data:</strong> ${formatDate(servico.data)} | 
                  <strong>Quilometragem:</strong> ${servico.quilometragem.toLocaleString()}km | 
-                 <strong>Valor:</strong> ${formatCurrency(servico.valor)}</p>
+                 <strong>Valor:</strong> ${formatCurrency(servico.valor)} |
+                 <strong>Tipo:</strong> <span style="text-transform: capitalize;">${servico.tipoServico}</span></p>
               <p><strong>Tipo:</strong> ${servico.tipoServico} | 
                  <strong>Mecânico:</strong> ${servico.mecanico}</p>
               
               ${servico.pecasTrocadas.length > 0 ? `
-                <p><strong>Peças Trocadas:</strong></p>
-                <ul>
+                <div class="pecas-list">
+                  <strong>Peças Trocadas:</strong><br>
                   ${servico.pecasTrocadas.map(peca => `
-                    <li>${peca.nome} - ${formatCurrency(peca.valor)}
-                      ${peca.garantia ? ` (Garantia: ${peca.garantia.meses} meses)` : ''}
-                    </li>
+                    <span class="peca-item">
+                      ${peca.nome} - ${formatCurrency(peca.valor)}
+                      ${peca.garantia ? ` (Garantia: ${peca.garantia.meses}m)` : ''}
+                    </span>
                   `).join('')}
-                </ul>
+                </div>
               ` : ''}
               
               ${servico.observacoes ? `<p><strong>Observações:</strong> ${servico.observacoes}</p>` : ''}
               
               ${servico.proximaRevisao ? `
-                <p><strong>Próxima Revisão:</strong> ${formatDate(servico.proximaRevisao.data)} 
-                   ou ${servico.proximaRevisao.quilometragem.toLocaleString()}km</p>
+                <div style="background: #dbeafe; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                  <strong>🔧 Próxima Revisão:</strong> ${formatDate(servico.proximaRevisao.data)} 
+                  ou ${servico.proximaRevisao.quilometragem.toLocaleString()}km
+                </div>
               ` : ''}
             </div>
-          `).join('')}
+          `).join('') : '<p style="text-align: center; color: #6b7280; padding: 40px;">Nenhum serviço registrado para esta motocicleta.</p>'}
         </div>
 
-        <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
-          <p>Documento gerado automaticamente pelo MotoGestor</p>
-          <p>Para dúvidas, entre em contato conosco</p>
+        <div class="footer">
+          <p><strong>Documento gerado automaticamente pelo ${oficina.nome}</strong></p>
+          <p>Data de geração: ${new Date().toLocaleString('pt-BR')}</p>
+          <p>Para dúvidas ou agendamentos, entre em contato conosco</p>
+          ${oficina.telefone ? `<p>📞 ${oficina.telefone}` : ''}
+          ${oficina.email ? ` | 📧 ${oficina.email}</p>` : '</p>'}
         </div>
       </body>
       </html>
@@ -126,9 +239,12 @@ export class PDFService {
   static async enviarPorEmail(
     cliente: Cliente, 
     moto: Moto, 
-    pdfBlob: Blob
+    pdfBlob: Blob,
+    oficinaInfo?: OficinaInfo
   ): Promise<boolean> {
     try {
+      const oficina = oficinaInfo || { nome: 'MotoGestor' };
+      
       // Simulação de envio por email - integraria com serviço real
       const formData = new FormData();
       formData.append('to', cliente.email || '');
@@ -136,12 +252,14 @@ export class PDFService {
       formData.append('body', `
         Olá ${cliente.nome},
 
-        Segue em anexo o histórico médico completo da sua ${moto.modelo}.
+        Segue em anexo o histórico médico completo da sua ${moto.modelo} (${moto.placa}).
 
         Este documento contém todos os serviços realizados, peças trocadas e recomendações para manutenções futuras.
 
+        Qualquer dúvida, estamos à disposição!
+
         Atenciosamente,
-        Equipe MotoGestor
+        Equipe ${oficina.nome}
       `);
       formData.append('attachment', pdfBlob, `historico-${moto.placa}.pdf`);
 

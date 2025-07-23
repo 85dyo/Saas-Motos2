@@ -1,5 +1,106 @@
 import { Moto, HistoricoServico, AlertaManutencao } from '../types';
 
+// Interface para configuração de IA
+interface IAConfig {
+  provider: 'openai' | 'anthropic' | 'google' | 'grok' | 'llama' | 'none';
+  apiKey: string;
+  model?: string;
+}
+
+// Função para obter configuração de IA
+const getIAConfig = (): IAConfig | null => {
+  try {
+    const config = JSON.parse(localStorage.getItem('motogestor_config') || '{}');
+    const integracao = config.integracao || {};
+    
+    if (!integracao.aiProvider || integracao.aiProvider === 'none' || !integracao.aiApiKey) {
+      return null;
+    }
+    
+    return {
+      provider: integracao.aiProvider,
+      apiKey: integracao.aiApiKey,
+      model: integracao.aiModel
+    };
+  } catch (error) {
+    console.error('Erro ao obter configuração de IA:', error);
+    return null;
+  }
+};
+
+// Função para chamar API de IA
+const callAIAPI = async (prompt: string, config: IAConfig): Promise<string | null> => {
+  try {
+    let apiUrl = '';
+    let headers: any = {
+      'Content-Type': 'application/json'
+    };
+    let body: any = {};
+    
+    switch (config.provider) {
+      case 'openai':
+        apiUrl = 'https://api.openai.com/v1/chat/completions';
+        headers['Authorization'] = `Bearer ${config.apiKey}`;
+        body = {
+          model: config.model || 'gpt-3.5-turbo',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 500,
+          temperature: 0.7
+        };
+        break;
+        
+      case 'anthropic':
+        apiUrl = 'https://api.anthropic.com/v1/messages';
+        headers['x-api-key'] = config.apiKey;
+        headers['anthropic-version'] = '2023-06-01';
+        body = {
+          model: config.model || 'claude-3-sonnet-20240229',
+          max_tokens: 500,
+          messages: [{ role: 'user', content: prompt }]
+        };
+        break;
+        
+      case 'google':
+        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${config.model || 'gemini-pro'}:generateContent?key=${config.apiKey}`;
+        body = {
+          contents: [{ parts: [{ text: prompt }] }]
+        };
+        break;
+        
+      default:
+        console.warn(`Provedor de IA ${config.provider} não implementado ainda`);
+        return null;
+    }
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Extrair resposta baseada no provedor
+    switch (config.provider) {
+      case 'openai':
+        return data.choices?.[0]?.message?.content || null;
+      case 'anthropic':
+        return data.content?.[0]?.text || null;
+      case 'google':
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+      default:
+        return null;
+    }
+  } catch (error) {
+    console.error('Erro ao chamar API de IA:', error);
+    return null;
+  }
+};
+
 // Base de dados de manutenção por fabricante/modelo
 interface ManualManutencao {
   fabricante: string;
@@ -79,6 +180,61 @@ export class AnaliseInteligente {
     recomendacoes: string[];
     proximosServicos: { item: string; urgencia: 'baixa' | 'media' | 'alta'; prazo: string }[];
   }> {
+    // Verificar se IA está configurada
+    const iaConfig = getIAConfig();
+    
+    if (iaConfig) {
+      try {
+        const prompt = `
+Analise o histórico de manutenção desta motocicleta e forneça insights:
+
+Motocicleta: ${moto.fabricante} ${moto.modelo} (${moto.ano})
+Quilometragem atual: ${quilometragemAtual}km
+
+Histórico de serviços (${historico.length} registros):
+${historico.slice(0, 10).map(h => 
+  `- ${h.data}: ${h.descricao} (${h.quilometragem}km, ${h.tipoServico}, R$ ${h.valor})`
+).join('\n')}
+
+Por favor, forneça uma análise estruturada em JSON com:
+{
+  "riscoPotencial": "baixo|medio|alto|critico",
+  "score": 0-100,
+  "fatoresRisco": ["fator1", "fator2"],
+  "recomendacoes": ["rec1", "rec2"],
+  "proximosServicos": [{"item": "nome", "urgencia": "baixa|media|alta", "prazo": "descrição"}]
+}
+
+Base sua análise em:
+- Frequência de manutenções
+- Tipos de serviços (preventivo vs corretivo)
+- Idade da motocicleta
+- Padrões de quilometragem
+- Custos crescentes
+        `;
+        
+        const aiResponse = await callAIAPI(prompt, iaConfig);
+        
+        if (aiResponse) {
+          try {
+            const parsed = JSON.parse(aiResponse);
+            return {
+              riscoPotencial: parsed.riscoPotencial || 'medio',
+              score: parsed.score || 70,
+              fatoresRisco: parsed.fatoresRisco || [],
+              recomendacoes: parsed.recomendacoes || [],
+              proximosServicos: parsed.proximosServicos || []
+            };
+          } catch (parseError) {
+            console.error('Erro ao parsear resposta da IA:', parseError);
+          }
+        }
+      } catch (error) {
+        console.error('Erro na análise com IA:', error);
+      }
+    }
+    
+    // Fallback para análise tradicional
     const manual = this.getManualManutencao(moto.fabricante, moto.modelo);
     const ultimoServico = historico[0];
     const hoje = new Date();
@@ -176,6 +332,69 @@ export class AnaliseInteligente {
     historico: HistoricoServico[],
     quilometragemAtual: number
   ): Promise<Omit<AlertaManutencao, 'id' | 'clienteId' | 'createdAt'>[]> {
+    // Verificar se IA está configurada para alertas preditivos
+    const iaConfig = getIAConfig();
+    const config = JSON.parse(localStorage.getItem('motogestor_config') || '{}');
+    
+    if (iaConfig && config.integracao?.alertasPreditivos) {
+      try {
+        const prompt = `
+Gere alertas de manutenção inteligentes para esta motocicleta:
+
+Motocicleta: ${moto.fabricante} ${moto.modelo} (${moto.ano})
+Quilometragem atual: ${quilometragemAtual}km
+
+Histórico recente:
+${historico.slice(0, 5).map(h => 
+  `- ${h.data}: ${h.descricao} (${h.quilometragem}km)`
+).join('\n')}
+
+Forneça alertas em JSON:
+[
+  {
+    "tipo": "quilometragem|tempo|peca_garantia",
+    "prioridade": "baixa|media|alta|critica",
+    "titulo": "Título do alerta",
+    "descricao": "Descrição detalhada",
+    "diasParaVencimento": 30,
+    "kmParaVencimento": 1000
+  }
+]
+
+Base os alertas em:
+- Intervalos típicos para ${moto.fabricante}
+- Padrão de uso baseado no histórico
+- Idade da motocicleta
+- Peças que podem estar próximas do fim da vida útil
+        `;
+        
+        const aiResponse = await callAIAPI(prompt, iaConfig);
+        
+        if (aiResponse) {
+          try {
+            const alertasIA = JSON.parse(aiResponse);
+            const hoje = new Date();
+            
+            return alertasIA.map((alerta: any) => ({
+              motoId: moto.id,
+              tipo: alerta.tipo || 'quilometragem',
+              prioridade: alerta.prioridade || 'media',
+              titulo: alerta.titulo,
+              descricao: alerta.descricao,
+              dataVencimento: new Date(hoje.getTime() + (alerta.diasParaVencimento || 30) * 24 * 60 * 60 * 1000),
+              quilometragemVencimento: quilometragemAtual + (alerta.kmParaVencimento || 1000),
+              status: 'ativo' as const
+            }));
+          } catch (parseError) {
+            console.error('Erro ao parsear alertas da IA:', parseError);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao gerar alertas com IA:', error);
+      }
+    }
+    
+    // Fallback para alertas baseados no manual
     const manual = this.getManualManutencao(moto.fabricante, moto.modelo);
     const alertas: Omit<AlertaManutencao, 'id' | 'clienteId' | 'createdAt'>[] = [];
     

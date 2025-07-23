@@ -84,10 +84,21 @@ const PortalCliente: React.FC = () => {
       const historico = historicos[moto.id] || [];
       const alertasMoto = alertas[moto.id] || [];
       
-      const pdfBlob = await PDFService.gerarHistoricoMedico(cliente, moto, historico, alertasMoto);
+      // Obter configurações da oficina
+      const config = JSON.parse(localStorage.getItem('motogestor_config') || '{}');
+      const oficinaInfo = {
+        nome: config.oficina?.nome || 'MotoGestor',
+        endereco: config.oficina?.endereco,
+        telefone: config.oficina?.telefone,
+        email: config.oficina?.email,
+        logo: config.oficina?.logo
+      };
+      
+      const pdfBlob = await PDFService.gerarHistoricoMedico(cliente, moto, historico, alertasMoto, oficinaInfo);
       PDFService.downloadPDF(pdfBlob, `historico-${moto.placa}.pdf`);
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
+      alert('Erro ao gerar PDF do histórico');
     }
   };
 
@@ -101,8 +112,18 @@ const PortalCliente: React.FC = () => {
       const historico = historicos[moto.id] || [];
       const alertasMoto = alertas[moto.id] || [];
       
-      const pdfBlob = await PDFService.gerarHistoricoMedico(cliente, moto, historico, alertasMoto);
-      const sucesso = await PDFService.enviarPorEmail(cliente, moto, pdfBlob);
+      // Obter configurações da oficina
+      const config = JSON.parse(localStorage.getItem('motogestor_config') || '{}');
+      const oficinaInfo = {
+        nome: config.oficina?.nome || 'MotoGestor',
+        endereco: config.oficina?.endereco,
+        telefone: config.oficina?.telefone,
+        email: config.oficina?.email,
+        logo: config.oficina?.logo
+      };
+      
+      const pdfBlob = await PDFService.gerarHistoricoMedico(cliente, moto, historico, alertasMoto, oficinaInfo);
+      const sucesso = await PDFService.enviarPorEmail(cliente, moto, pdfBlob, oficinaInfo);
       
       if (sucesso) {
         alert('Histórico enviado por email com sucesso!');
@@ -111,6 +132,7 @@ const PortalCliente: React.FC = () => {
       }
     } catch (error) {
       console.error('Erro ao enviar por email:', error);
+      alert('Erro ao enviar histórico por email');
     }
   };
 
@@ -121,7 +143,17 @@ const PortalCliente: React.FC = () => {
       const historico = historicos[moto.id] || [];
       const alertasMoto = alertas[moto.id] || [];
       
-      const pdfBlob = await PDFService.gerarHistoricoMedico(cliente, moto, historico, alertasMoto);
+      // Obter configurações da oficina
+      const config = JSON.parse(localStorage.getItem('motogestor_config') || '{}');
+      const oficinaInfo = {
+        nome: config.oficina?.nome || 'MotoGestor',
+        endereco: config.oficina?.endereco,
+        telefone: config.oficina?.telefone,
+        email: config.oficina?.email,
+        logo: config.oficina?.logo
+      };
+      
+      const pdfBlob = await PDFService.gerarHistoricoMedico(cliente, moto, historico, alertasMoto, oficinaInfo);
       const sucesso = await EvolutionApiService.enviarHistoricoMedico(cliente, moto.id, pdfBlob);
       
       if (sucesso) {
@@ -131,6 +163,7 @@ const PortalCliente: React.FC = () => {
       }
     } catch (error) {
       console.error('Erro ao enviar WhatsApp:', error);
+      alert('Erro ao enviar histórico via WhatsApp');
     }
   };
 

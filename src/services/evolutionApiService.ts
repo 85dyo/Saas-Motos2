@@ -249,11 +249,18 @@ export class EvolutionApiService {
       // Converter blob para file
       const file = new File([pdfBlob], `historico-${moto.placa}.pdf`, { type: 'application/pdf' });
       
+      // Obter informações da oficina para personalizar a mensagem
+      const config = JSON.parse(localStorage.getItem('motogestor_config') || '{}');
+      const oficinaNome = config.oficina?.nome || 'MotoGestor';
+      const oficinaTelefone = config.oficina?.telefone || '(11) 99999-9999';
+      
       const caption = `🏍️ *Histórico Médico - ${moto.modelo}*\n\n` +
                      `Olá ${cliente.nome}!\n\n` +
                      `Segue o histórico completo da sua ${moto.modelo} (${moto.placa}).\n\n` +
                      `📋 Documento gerado em: ${new Date().toLocaleDateString('pt-BR')}\n\n` +
-                     `Para dúvidas, entre em contato conosco!`;
+                     `Para dúvidas, entre em contato conosco!\n` +
+                     `📞 ${oficinaTelefone}\n\n` +
+                     `Atenciosamente,\n${oficinaNome}`;
 
       return await this.enviarDocumento(numero, file, caption);
     } catch (error) {

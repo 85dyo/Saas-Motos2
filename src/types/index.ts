@@ -227,6 +227,9 @@ export interface ConfiguracoesSistema {
     smsProvider?: 'twilio' | 'zenvia';
     analiseIA?: boolean;
     alertasPreditivos?: boolean;
+    aiProvider?: 'openai' | 'anthropic' | 'google' | 'grok' | 'llama' | 'none';
+    aiApiKey?: string;
+    aiModel?: string;
   };
 }
 

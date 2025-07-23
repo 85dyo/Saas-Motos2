@@ -205,7 +205,7 @@ const OrdensServico: React.FC = () => {
       alert('Cliente cadastrado com sucesso!');
     } catch (error) {
       console.error('Erro ao criar cliente:', error);
-      alert('Erro ao cadastrar cliente');
+      alert(`Erro ao cadastrar cliente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   };
 
@@ -702,6 +702,7 @@ const OrdensServico: React.FC = () => {
                   onChange={(e) => updateNovoClienteMoto('placa', e.target.value)}
                   placeholder="ABC-1234"
                   error={novoClienteData.motos[0].placa && !validarPlaca(novoClienteData.motos[0].placa) ? 'Formato inválido' : undefined}
+                  helper="Formatos aceitos: ABC-1234 (antigo) ou ABC1D23 (Mercosul)"
                   required
                 />
                 <div>
