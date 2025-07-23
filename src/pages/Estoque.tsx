@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
+import { useToast } from '../contexts/ToastContext';
 import { EstoqueService } from '../services/estoqueService';
 import { Produto, MovimentacaoEstoque } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
@@ -20,6 +21,7 @@ const Estoque: React.FC = () => {
   const [modalType, setModalType] = useState<'produto' | 'movimentacao'>('produto');
   const [editingProduto, setEditingProduto] = useState<Produto | null>(null);
   const [relatorio, setRelatorio] = useState<any>(null);
+  const { showToast } = useToast();
 
   const [formProduto, setFormProduto] = useState({
     codigo: '',
@@ -118,7 +120,10 @@ const Estoque: React.FC = () => {
       setIsModalOpen(false);
     } catch (error) {
       console.error('Erro ao movimentar estoque:', error);
-      alert(error instanceof Error ? error.message : 'Erro ao movimentar estoque');
+      showToast({
+        message: error instanceof Error ? error.message : 'Erro ao movimentar estoque',
+        type: 'error'
+      });
     }
   };
 
@@ -189,14 +194,23 @@ const Estoque: React.FC = () => {
     try {
       const sucesso = await EstoqueService.importarEstoque(file);
       if (sucesso) {
-        alert('Estoque importado com sucesso!');
+        showToast({
+          message: 'Estoque importado com sucesso!',
+          type: 'success'
+        });
         await loadData();
       } else {
-        alert('Erro ao importar estoque');
+        showToast({
+          message: 'Erro ao importar estoque',
+          type: 'error'
+        });
       }
     } catch (error) {
       console.error('Erro ao importar estoque:', error);
-      alert('Erro ao importar estoque');
+      showToast({
+        message: 'Erro ao importar estoque',
+        type: 'error'
+      });
     }
     
     // Reset input

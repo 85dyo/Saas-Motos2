@@ -13,6 +13,8 @@ const initialClientes: Cliente[] = [
     telefone: '(11) 99111-2233',
     cpf: '123.456.789-00',
     endereco: 'Rua das Flores, 123',
+    tipoCliente: 'vip',
+    observacoes: 'Cliente muito pontual e sempre faz manutenção preventiva',
     motos: [
       { id: '1', placa: 'ABC-1234', fabricante: 'Honda', modelo: 'CB 600F Hornet', ano: 2019, cor: 'Azul' },
       { id: '2', placa: 'DEF-5678', fabricante: 'Yamaha', modelo: 'XJ6', ano: 2020, cor: 'Preta' }
@@ -26,6 +28,7 @@ const initialClientes: Cliente[] = [
     email: 'ana@email.com',
     telefone: '(11) 98222-3344',
     endereco: 'Av. Principal, 456',
+    tipoCliente: 'ativo',
     motos: [
       { id: '3', placa: 'GHI-9012', fabricante: 'Kawasaki', modelo: 'Ninja 300', ano: 2021, cor: 'Verde' }
     ],

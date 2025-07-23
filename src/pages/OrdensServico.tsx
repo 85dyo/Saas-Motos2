@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
+import { useToast } from '../contexts/ToastContext';
 import { DataService } from '../services/dataService';
 import { OrdemServico, Cliente, DashboardMetrics } from '../types';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,6 +32,7 @@ const OrdensServico: React.FC = () => {
   const [viewingOS, setViewingOS] = useState<OrdemServico | null>(null);
   const [showDashboard, setShowDashboard] = useState(true);
   const [dashboardData, setDashboardData] = useState<any>(null);
+  const { showToast } = useToast();
   const { user } = useAuth();
 
   // Form state para OS
@@ -202,10 +204,16 @@ const OrdensServico: React.FC = () => {
       setIsClienteModalOpen(false);
       resetNovoClienteForm();
       
-      alert('Cliente cadastrado com sucesso!');
+      showToast({
+        message: 'Cliente cadastrado com sucesso!',
+        type: 'success'
+      });
     } catch (error) {
       console.error('Erro ao criar cliente:', error);
-      alert(`Erro ao cadastrar cliente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      showToast({
+        message: `Erro ao cadastrar cliente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        type: 'error'
+      });
     }
   };
 

@@ -20,6 +20,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
+import { useToast } from '../contexts/ToastContext';
 import { TemaService } from '../services/temaService';
 import { TemaPersonalizado } from '../types';
 import { ConfiguracoesSistema } from '../types';
@@ -58,6 +59,7 @@ const Configuracoes: React.FC = () => {
   const [temaAtivo, setTemaAtivo] = useState<TemaPersonalizado | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('geral');
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadTemas();
@@ -80,7 +82,10 @@ const Configuracoes: React.FC = () => {
     localStorage.setItem('motogestor_config', JSON.stringify(config));
     
     setIsSaving(false);
-    alert('Configurações salvas com sucesso!');
+    showToast({
+      message: 'Configurações salvas com sucesso!',
+      type: 'success'
+    });
   };
 
   const handleAtivarTema = async (temaId: string) => {
@@ -108,11 +113,17 @@ const Configuracoes: React.FC = () => {
   };
 
   const handleTestWhatsApp = async () => {
-    alert('Teste de WhatsApp enviado! Verifique seu telefone.');
+    showToast({
+      message: 'Teste de WhatsApp enviado! Verifique seu telefone.',
+      type: 'info'
+    });
   };
 
   const handleTestEmail = async () => {
-    alert('Email de teste enviado! Verifique sua caixa de entrada.');
+    showToast({
+      message: 'Email de teste enviado! Verifique sua caixa de entrada.',
+      type: 'info'
+    });
   };
 
   const tabs = [

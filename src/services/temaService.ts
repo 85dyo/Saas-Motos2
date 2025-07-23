@@ -153,6 +153,38 @@ export class TemaService {
     root.style.setProperty('--cor-fundo-secundario', tema.cores.fundoSecundario);
     root.style.setProperty('--cor-bordas', tema.cores.bordas);
 
+    // Converter cores hex para RGB para uso com Tailwind
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    };
+
+    // Aplicar variações da cor primária para Tailwind
+    const primaryRgb = hexToRgb(tema.cores.primaria);
+    if (primaryRgb) {
+      // Gerar variações da cor primária
+      const variations = [
+        { suffix: '50', opacity: 0.05 },
+        { suffix: '100', opacity: 0.1 },
+        { suffix: '200', opacity: 0.2 },
+        { suffix: '300', opacity: 0.3 },
+        { suffix: '400', opacity: 0.4 },
+        { suffix: '500', opacity: 1 },
+        { suffix: '600', opacity: 1.2 },
+        { suffix: '700', opacity: 1.4 },
+        { suffix: '800', opacity: 1.6 },
+        { suffix: '900', opacity: 1.8 }
+      ];
+
+      variations.forEach(({ suffix, opacity }) => {
+        const adjustedColor = `${Math.min(255, Math.floor(primaryRgb.r * opacity))} ${Math.min(255, Math.floor(primaryRgb.g * opacity))} ${Math.min(255, Math.floor(primaryRgb.b * opacity))}`;
+        root.style.setProperty(`--color-primary-${suffix}`, adjustedColor);
+      });
+    }
     // Aplicar classe do modo
     document.body.classList.remove('light-mode', 'dark-mode');
     document.body.classList.add(`${tema.modo}-mode`);

@@ -94,7 +94,14 @@ const PortalCliente: React.FC = () => {
         logo: config.oficina?.logo
       };
       
-      const pdfBlob = await PDFService.gerarHistoricoMedico(cliente, moto, historico, alertasMoto, oficinaInfo);
+      const pdfBlob = await PDFService.gerarHistoricoMedico(
+        cliente, 
+        moto, 
+        historico, 
+        alertasMoto, 
+        oficinaInfo,
+        'Relatório de Manutenção da Motocicleta'
+      );
       PDFService.downloadPDF(pdfBlob, `historico-${moto.placa}.pdf`);
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
@@ -122,7 +129,14 @@ const PortalCliente: React.FC = () => {
         logo: config.oficina?.logo
       };
       
-      const pdfBlob = await PDFService.gerarHistoricoMedico(cliente, moto, historico, alertasMoto, oficinaInfo);
+      const pdfBlob = await PDFService.gerarHistoricoMedico(
+        cliente, 
+        moto, 
+        historico, 
+        alertasMoto, 
+        oficinaInfo,
+        'Relatório de Manutenção da Motocicleta'
+      );
       const sucesso = await PDFService.enviarPorEmail(cliente, moto, pdfBlob, oficinaInfo);
       
       if (sucesso) {
@@ -153,7 +167,14 @@ const PortalCliente: React.FC = () => {
         logo: config.oficina?.logo
       };
       
-      const pdfBlob = await PDFService.gerarHistoricoMedico(cliente, moto, historico, alertasMoto, oficinaInfo);
+      const pdfBlob = await PDFService.gerarHistoricoMedico(
+        cliente, 
+        moto, 
+        historico, 
+        alertasMoto, 
+        oficinaInfo,
+        'Relatório de Manutenção da Motocicleta'
+      );
       const sucesso = await EvolutionApiService.enviarHistoricoMedico(cliente, moto.id, pdfBlob);
       
       if (sucesso) {

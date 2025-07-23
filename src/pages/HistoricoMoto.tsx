@@ -69,6 +69,38 @@ const HistoricoMoto: React.FC = () => {
     }
   };
 
+  const handleDownloadHistorico = async (moto: Moto) => {
+    if (!cliente) return;
+
+    try {
+      const historico = historicos[moto.id] || [];
+      const alertasMoto = alertas[moto.id] || [];
+      
+      // Obter configurações da oficina
+      const config = JSON.parse(localStorage.getItem('motogestor_config') || '{}');
+      const oficinaInfo = {
+        nome: config.oficina?.nome || 'MotoGestor',
+        endereco: config.oficina?.endereco,
+        telefone: config.oficina?.telefone,
+        email: config.oficina?.email,
+        logo: config.oficina?.logo
+      };
+      
+      const pdfBlob = await PDFService.gerarHistoricoMedico(
+        cliente, 
+        moto, 
+        historico, 
+        alertasMoto, 
+        oficinaInfo,
+        'Relatório de Manutenção'
+      );
+      PDFService.downloadPDF(pdfBlob, `historico-${moto.placa}.pdf`);
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      alert('Erro ao gerar PDF do histórico');
+    }
+  };
+
   const getPrioridadeBadge = (prioridade: string) => {
     switch (prioridade) {
       case 'critica':

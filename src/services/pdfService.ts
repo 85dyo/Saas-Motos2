@@ -18,9 +18,10 @@ export class PDFService {
     moto: Moto, 
     historico: HistoricoServico[], 
     alertas: AlertaManutencao[],
-    oficinaInfo?: OficinaInfo
+    oficinaInfo?: OficinaInfo,
+    documentTitle: string = 'Relatório de Manutenção'
   ): Promise<Blob> {
-    const htmlContent = this.gerarHTMLHistorico(cliente, moto, historico, alertas, oficinaInfo);
+    const htmlContent = this.gerarHTMLHistorico(cliente, moto, historico, alertas, oficinaInfo, documentTitle);
     
     // Criar elemento temporário para renderizar o HTML
     const tempDiv = document.createElement('div');
@@ -70,7 +71,8 @@ export class PDFService {
     moto: Moto, 
     historico: HistoricoServico[], 
     alertas: AlertaManutencao[],
-    oficinaInfo?: OficinaInfo
+    oficinaInfo?: OficinaInfo,
+    documentTitle: string = 'Relatório de Manutenção'
   ): string {
     const totalInvestido = historico.reduce((sum, h) => sum + h.valor, 0);
     const ultimoServico = historico[0];
@@ -90,34 +92,214 @@ export class PDFService {
       <html>
       <head>
         <meta charset="UTF-8">
-        <title>Histórico Médico - ${moto.modelo}</title>
+        <title>${documentTitle} - ${moto.modelo}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          .header { text-align: center; border-bottom: 2px solid #3B82F6; padding-bottom: 20px; }
-          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
-          .card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
-          .timeline { margin-top: 30px; }
-          .service-item { border-left: 3px solid #3B82F6; padding-left: 15px; margin-bottom: 20px; }
-          .alert { background: #FEF3C7; border: 1px solid #F59E0B; padding: 10px; border-radius: 5px; margin: 10px 0; }
-          .summary { background: #EFF6FF; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            background: #fff;
+            padding: 20px;
+          }
+          .header { 
+            text-align: center; 
+            border-bottom: 3px solid #3B82F6; 
+            padding-bottom: 20px; 
+            margin-bottom: 30px;
+          }
+          .logo { 
+            max-width: 150px; 
+            max-height: 80px; 
+            margin-bottom: 15px; 
+          }
+          .oficina-info { 
+            background: #f8fafc; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            text-align: center; 
+            font-size: 14px; 
+            color: #64748b; 
+          }
+          .document-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e293b;
+            margin: 15px 0;
+          }
+          .moto-info {
+            font-size: 18px;
+            color: #475569;
+            margin-bottom: 10px;
+          }
+          .cliente-info {
+            font-size: 16px;
+            color: #64748b;
+          }
+          .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 20px; 
+            margin: 30px 0; 
+          }
+          .stat-card { 
+            text-align: center; 
+            padding: 20px; 
+            background: #f1f5f9; 
+            border-radius: 12px; 
+            border: 1px solid #e2e8f0;
+          }
+          .stat-number { 
+            font-size: 28px; 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+          }
+          .stat-label { 
+            font-size: 12px; 
+            color: #64748b; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+          }
+          .section { 
+            margin: 30px 0; 
+            padding: 20px; 
+            background: #fff; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px; 
+          }
+          .section-title { 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #1e293b; 
+            margin-bottom: 15px; 
+            display: flex; 
+            align-items: center; 
+          }
+          .section-icon { 
+            margin-right: 10px; 
+            font-size: 20px; 
+          }
+          .timeline { 
+            position: relative; 
+          }
+          .service-item { 
+            border-left: 4px solid #3B82F6; 
+            padding-left: 20px; 
+            margin-bottom: 25px; 
+            position: relative;
+            background: #f8fafc;
+            padding: 15px 15px 15px 25px;
+            border-radius: 0 8px 8px 0;
+          }
+          .service-item::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 15px;
+            width: 12px;
+            height: 12px;
+            background: #3B82F6;
+            border-radius: 50%;
+          }
+          .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+          }
+          .service-title {
+            font-weight: bold;
+            color: #1e293b;
+            font-size: 16px;
+          }
+          .service-meta {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 8px;
+          }
+          .service-value {
+            font-weight: bold;
+            color: #059669;
+            font-size: 16px;
+          }
+          .service-type {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+          }
+          .type-preventiva { background: #dcfce7; color: #166534; }
+          .type-corretiva { background: #fef3c7; color: #92400e; }
+          .type-revisao { background: #dbeafe; color: #1e40af; }
+          .type-emergencia { background: #fee2e2; color: #991b1b; }
+          .pecas-list { 
+            margin: 10px 0; 
+            padding: 10px; 
+            background: #f1f5f9; 
+            border-radius: 6px; 
+          }
+          .peca-item { 
+            display: inline-block; 
+            background: #e2e8f0; 
+            padding: 4px 8px; 
+            margin: 2px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+          }
+          .alert-item { 
+            background: #fef3c7; 
+            border: 1px solid #f59e0b; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 10px 0; 
+          }
+          .alert-title {
+            font-weight: bold;
+            color: #92400e;
+            margin-bottom: 5px;
+          }
+          .alert-description {
+            color: #a16207;
+            font-size: 14px;
+            margin-bottom: 5px;
+          }
+          .alert-date {
+            font-size: 12px;
+            color: #a16207;
+          }
+          .no-data {
+            text-align: center;
+            color: #6b7280;
+            padding: 40px;
+            font-style: italic;
+          }
+          .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+          }
+          .next-revision {
+            background: #dbeafe;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border-left: 4px solid #3b82f6;
+          }
+          .next-revision-text {
+            color: #1e40af;
+            font-size: 14px;
+            font-weight: 500;
+          }
         </style>
       </head>
       <body>
         <div class="header">
-          <h1>Histórico Médico da Motocicleta</h1>
-          <h2>${moto.modelo} - ${moto.placa}</h2>
-          <p>Proprietário: ${cliente.nome}</p>
-          <p>Gerado em: ${formatDate(new Date())}</p>
-        </div>
-          .logo {
-            max-width: 150px;
-            max-height: 80px;
-            margin-bottom: 15px;
-          }
-          .oficina-info {
-            background: #f1f5f9;
-            padding: 15px;
-            border-radius: 8px;
           ${oficina.logo ? `<img src="${oficina.logo}" alt="Logo" class="logo">` : ''}
           <h1>${oficina.nome}</h1>
           <div class="oficina-info">
@@ -128,13 +310,17 @@ export class PDFService {
               ${oficina.email ? `Email: ${oficina.email}` : ''}
             </div>
           </div>
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 14px;
-          <p><strong>Telefone:</strong> ${cliente.telefone}</p>
-          ${cliente.email ? `<p><strong>Email:</strong> ${cliente.email}</p>` : ''}
-            color: #64748b;
-          }
+          
+          <div class="document-title">${documentTitle}</div>
+          <div class="moto-info">${moto.modelo} - ${moto.placa}</div>
+          <div class="cliente-info">
+            Proprietário: ${cliente.nome} | Tel: ${cliente.telefone}
+            ${cliente.email ? ` | Email: ${cliente.email}` : ''}
+          </div>
+          <div style="margin-top: 10px; font-size: 14px; color: #64748b;">
+            Gerado em: ${formatDate(new Date())}
+          </div>
+        </div>
 
         <div class="stats-grid">
           <div class="stat-card">
@@ -155,53 +341,47 @@ export class PDFService {
           </div>
         </div>
 
-        <div class="summary">
-          <h3>Resumo Geral</h3>
-          <div class="info-grid">
-            <div>
-              <strong>Total de Serviços:</strong> ${historico.length}<br>
-              <strong>Investimento Total:</strong> ${formatCurrency(totalInvestido)}<br>
-              <strong>Último Serviço:</strong> ${ultimoServico ? formatDate(ultimoServico.data) : 'Nenhum'}
-              ${ultimoServico ? `<br><strong>Quilometragem Atual:</strong> ${ultimoServico.quilometragem.toLocaleString()}km` : ''}
-            </div>
-            <div>
-              <strong>Serviços Preventivos:</strong> ${servicosPreventivos}<br>
-              <strong>Serviços Corretivos:</strong> ${servicosCorretivos}<br>
-              <strong>Alertas Ativos:</strong> ${alertas.length}
-              ${ultimoServico ? `<br><strong>Dias desde último serviço:</strong> ${Math.floor((new Date().getTime() - new Date(ultimoServico.data).getTime()) / (1000 * 60 * 60 * 24))}` : ''}
-            </div>
-          </div>
-        </div>
-
         ${alertas.length > 0 ? `
-          <div class="card">
-            <h3>⚠️ Alertas Ativos</h3>
+          <div class="section">
+            <div class="section-title">
+              <span class="section-icon">⚠️</span>
+              Alertas Ativos (${alertas.length})
+            </div>
             ${alertas.map(alerta => `
-              <div class="alert">
-                <strong>${alerta.titulo}</strong><br>
-                ${alerta.descricao}<br>
-                <small><strong>Vencimento:</strong> ${formatDate(alerta.dataVencimento)}</small>
+              <div class="alert-item">
+                <div class="alert-title">${alerta.titulo}</div>
+                <div class="alert-description">${alerta.descricao}</div>
+                <div class="alert-date">Vencimento: ${formatDate(alerta.dataVencimento)}</div>
                 ${alerta.quilometragemVencimento ? `<br><small><strong>Quilometragem:</strong> ${alerta.quilometragemVencimento.toLocaleString()}km</small>` : ''}
               </div>
             `).join('')}
           </div>
         ` : ''}
 
-        <div class="timeline">
-          <h3>📋 Histórico de Serviços</h3>
+        <div class="section">
+          <div class="section-title">
+            <span class="section-icon">📋</span>
+            Histórico de Serviços
+          </div>
+          <div class="timeline">
           ${historico.length > 0 ? historico.map((servico, index) => `
             <div class="service-item">
-              <h4>#${historico.length - index} - ${servico.descricao}</h4>
-              <p><strong>Data:</strong> ${formatDate(servico.data)} | 
-                 <strong>Quilometragem:</strong> ${servico.quilometragem.toLocaleString()}km | 
-                 <strong>Valor:</strong> ${formatCurrency(servico.valor)} |
-                 <strong>Tipo:</strong> <span style="text-transform: capitalize;">${servico.tipoServico}</span></p>
-              <p><strong>Tipo:</strong> ${servico.tipoServico} | 
-                 <strong>Mecânico:</strong> ${servico.mecanico}</p>
+              <div class="service-header">
+                <div>
+                  <div class="service-title">#${historico.length - index} - ${servico.descricao}</div>
+                  <div class="service-meta">
+                    ${formatDate(servico.data)} • ${servico.quilometragem.toLocaleString()}km • Mecânico: ${servico.mecanico}
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <div class="service-value">${formatCurrency(servico.valor)}</div>
+                  <div class="service-type type-${servico.tipoServico}">${servico.tipoServico}</div>
+                </div>
+              </div>
               
               ${servico.pecasTrocadas.length > 0 ? `
                 <div class="pecas-list">
-                  <strong>Peças Trocadas:</strong><br>
+                  <strong style="font-size: 14px; color: #374151;">Peças Trocadas:</strong><br>
                   ${servico.pecasTrocadas.map(peca => `
                     <span class="peca-item">
                       ${peca.nome} - ${formatCurrency(peca.valor)}
@@ -214,13 +394,16 @@ export class PDFService {
               ${servico.observacoes ? `<p><strong>Observações:</strong> ${servico.observacoes}</p>` : ''}
               
               ${servico.proximaRevisao ? `
-                <div style="background: #dbeafe; padding: 10px; border-radius: 6px; margin-top: 10px;">
-                  <strong>🔧 Próxima Revisão:</strong> ${formatDate(servico.proximaRevisao.data)} 
+                <div class="next-revision">
+                  <div class="next-revision-text">
+                    🔧 Próxima Revisão: ${formatDate(servico.proximaRevisao.data)} 
                   ou ${servico.proximaRevisao.quilometragem.toLocaleString()}km
+                  </div>
                 </div>
               ` : ''}
             </div>
-          `).join('') : '<p style="text-align: center; color: #6b7280; padding: 40px;">Nenhum serviço registrado para esta motocicleta.</p>'}
+          `).join('') : '<div class="no-data">Nenhum serviço registrado para esta motocicleta.</div>'}
+          </div>
         </div>
 
         <div class="footer">

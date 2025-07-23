@@ -1,3 +1,42 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* Cores padrão do tema */
+  --cor-primaria: #3B82F6;
+  --cor-secundaria: #6B7280;
+  --cor-sucesso: #10B981;
+  --cor-aviso: #F59E0B;
+  --cor-erro: #EF4444;
+  --cor-fundo: #F9FAFB;
+  --cor-texto: #111827;
+  --cor-fundo-secundario: #FFFFFF;
+  --cor-bordas: #E5E7EB;
+  
+  /* Variações da cor primária para Tailwind */
+  --color-primary-50: 239 246 255;
+  --color-primary-100: 219 234 254;
+  --color-primary-200: 191 219 254;
+  --color-primary-300: 147 197 253;
+  --color-primary-400: 96 165 250;
+  --color-primary-500: 59 130 246;
+  --color-primary-600: 37 99 235;
+  --color-primary-700: 29 78 216;
+  --color-primary-800: 30 64 175;
+  --color-primary-900: 30 58 138;
+}
+
+.light-mode {
+  --cor-fundo: #F9FAFB;
+  --cor-texto: #111827;
+  --cor-fundo-secundario: #FFFFFF;
+  --cor-bordas: #E5E7EB;
+}
+
+.dark-mode {
+  --cor-fundo: #1F2937;
+  --cor-texto: #F9FAFB;
+  --cor-fundo-secundario: #374151;
+  --cor-bordas: #4B5563;
+}

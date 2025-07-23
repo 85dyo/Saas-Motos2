@@ -203,7 +203,7 @@ export const formatarPlaca = (placa: string): string => {
   // Remove caracteres não alfanuméricos
   const limpa = placa.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
   
-  // Formato antigo: ABC-1234
+  // Formato antigo: LLL-NNNN (3 letras + 4 números)
   if (limpa.length <= 7 && /^[A-Z]{0,3}[0-9]{0,4}$/.test(limpa)) {
     if (limpa.length > 3) {
       return `${limpa.slice(0, 3)}-${limpa.slice(3)}`;
@@ -211,7 +211,7 @@ export const formatarPlaca = (placa: string): string => {
     return limpa;
   }
   
-  // Formato Mercosul: ABC1D23
+  // Formato Mercosul: LLLNLNN (3 letras + 1 número + 1 letra + 2 números)
   if (limpa.length <= 7 && /^[A-Z]{0,3}[0-9]{0,1}[A-Z]{0,1}[0-9]{0,2}$/.test(limpa)) {
     return limpa;
   }
@@ -222,10 +222,10 @@ export const formatarPlaca = (placa: string): string => {
 export const validarPlaca = (placa: string): boolean => {
   const limpa = placa.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
   
-  // Formato antigo: ABC1234
+  // Formato antigo: LLL-NNNN (3 letras + 4 números)
   const formatoAntigo = /^[A-Z]{3}[0-9]{4}$/.test(limpa);
   
-  // Formato Mercosul: ABC1D23
+  // Formato Mercosul: LLLNLNN (3 letras + 1 número + 1 letra + 2 números)
   const formatoMercosul = /^[A-Z]{3}[0-9]{1}[A-Z]{1}[0-9]{2}$/.test(limpa);
   
   return formatoAntigo || formatoMercosul;
