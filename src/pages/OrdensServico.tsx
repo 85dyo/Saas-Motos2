@@ -8,7 +8,8 @@ import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
 import { useToast } from '../contexts/ToastContext';
 import { DataService } from '../services/dataService';
-import { OrdemServico, Cliente, DashboardMetrics } from '../types';
+import { OrdemServico, Cliente, DashboardMetrics, TipoServico } from '../types';
+import { TiposServicoService } from '../services/tiposServicoService';
 import { useAuth } from '../contexts/AuthContext';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { 
@@ -21,19 +22,64 @@ import {
 } from '../utils/motorcycleData';
 
 const OrdensServico: React.FC = () => {
+  // Estados principais para gerenciamento de OS
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [filteredOrdens, setFilteredOrdens] = useState<OrdemServico[]>([]);
+  
+  // Estados para filtros e busca
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  
+  // Estados para controle de interface
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isClienteModalOpen, setIsClienteModalOpen] = useState(false);
   const [viewingOS, setViewingOS] = useState<OrdemServico | null>(null);
   const [showDashboard, setShowDashboard] = useState(true);
   const [dashboardData, setDashboardData] = useState<any>(null);
+  
+  // Estados para serviços pré-configurados
+  // IMPORTANTE: Estes estados são fundamentais para a padronização dos dados
+  // que alimentam as métricas do dashboard principal (faturamento por tipo de serviço)
+  const [tiposServico, setTiposServico] = useState<TipoServico[]>([]);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  
   const { showToast } = useToast();
   const { user } = useAuth();
+
+  // DASHBOARD INTEGRATION: Função que sincroniza os serviços selecionados
+  // com a descrição e valor da OS, garantindo consistência nos dados
+  // que serão utilizados para gerar métricas no dashboard principal
+  const updateDescriptionAndValue = () => {
+    const selectedServices = tiposServico.filter(service =>
+      selectedServiceIds.includes(service.id)
+    );
+
+    if (selectedServices.length > 0) {
+      // Gera descrição padronizada baseada nos serviços selecionados
+      // Isso melhora a qualidade dos dados para análises no dashboard
+      const newDescription = selectedServices.map(service => service.nome).join(', ');
+      
+      // Calcula valor total baseado nos preços base dos serviços
+      // Garante precisão nas métricas de faturamento do dashboard
+      const newValue = selectedServices.reduce((sum, service) => sum + (service.precoBase || 0), 0);
+
+      setFormData(prev => ({
+        ...prev,
+        descricao: newDescription,
+        valor: newValue
+      }));
+    }
+  };
+
+  // Gerencia a seleção/deseleção de serviços pré-configurados
+  // Aciona automaticamente a atualização da descrição e valor da OS
+  const handleServiceSelectionChange = (serviceId: string, isChecked: boolean) => {
+    setSelectedServiceIds(prev =>
+      isChecked ? [...prev, serviceId] : prev.filter(id => id !== serviceId)
+    );
+  };
 
   // Form state para OS
   const [formData, setFormData] = useState({
@@ -69,7 +115,42 @@ const OrdensServico: React.FC = () => {
   useEffect(() => {
     loadData();
     loadDashboardData();
+    
+    // Carrega os tipos de serviço pré-configurados para seleção na criação de OS
+    // DASHBOARD INTEGRATION: Esta funcionalidade garante que os dados de faturamento
+    // por categoria de serviço no dashboard sejam consistentes e precisos
+    const loadTiposServico = async () => {
+      try {
+        const data = await TiposServicoService.getTiposServico();
+        setTiposServico(data.filter(t => t.ativo)); // Apenas serviços ativos
+      } catch (error) {
+        console.error('Erro ao carregar tipos de serviço:', error);
+      }
+    };
+    
+    loadTiposServico();
+    
+    // Carrega os tipos de serviço pré-configurados para seleção na criação de OS
+    // DASHBOARD INTEGRATION: Esta funcionalidade garante que os dados de faturamento
+    // por categoria de serviço no dashboard sejam consistentes e precisos
+    const loadTiposServico = async () => {
+      try {
+        const data = await TiposServicoService.getTiposServico();
+        setTiposServico(data.filter(t => t.ativo)); // Apenas serviços ativos
+      } catch (error) {
+        console.error('Erro ao carregar tipos de serviço:', error);
+      }
+    };
+    
+    loadTiposServico();
   }, []);
+
+  // DASHBOARD INTEGRATION: Monitora mudanças na seleção de serviços
+  // e atualiza automaticamente descrição e valor para manter consistência
+  // dos dados que alimentam as métricas do dashboard principal
+  useEffect(() => {
+    updateDescriptionAndValue();
+  }, [selectedServiceIds, tiposServico]);
 
   useEffect(() => {
     let filtered = ordens;
@@ -88,6 +169,16 @@ const OrdensServico: React.FC = () => {
 
     setFilteredOrdens(filtered);
   }, [ordens, searchTerm, statusFilter]);
+
+  // DASHBOARD INTEGRATION: Atualiza automaticamente descrição e valor da OS
+  // baseado nos serviços pré-configurados selecionados.
+  // Isso padroniza os dados que alimentam as métricas do dashboard principal:
+  // - Faturamento por tipo de serviço
+  // - Análise de produtividade por categoria
+  // - Relatórios de serviços mais frequentes
+  useEffect(() => {
+    updateDescriptionAndValue();
+  }, [selectedServiceIds, tiposServico]);
 
   const loadData = async () => {
     try {
@@ -155,6 +246,37 @@ const OrdensServico: React.FC = () => {
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
     }
+  };
+
+  // DASHBOARD INTEGRATION: Função que sincroniza os serviços selecionados
+  // com a descrição e valor da OS, garantindo consistência nos dados
+  // que serão utilizados para gerar métricas no dashboard principal
+  const updateDescriptionAndValue = () => {
+    const selectedServices = tiposServico.filter(service =>
+      selectedServiceIds.includes(service.id)
+    );
+
+    if (selectedServices.length > 0) {
+      // Gera descrição padronizada baseada nos serviços selecionados
+      const newDescription = selectedServices.map(service => service.nome).join(', ');
+      
+      // Calcula valor total baseado nos preços base dos serviços
+      const newValue = selectedServices.reduce((sum, service) => sum + (service.precoBase || 0), 0);
+
+      setFormData(prev => ({
+        ...prev,
+        descricao: newDescription,
+        valor: newValue
+      }));
+    }
+  };
+
+  // Gerencia a seleção/deseleção de serviços pré-configurados
+  // Aciona automaticamente a atualização da descrição e valor da OS
+  const handleServiceSelectionChange = (serviceId: string, isChecked: boolean) => {
+    setSelectedServiceIds(prev =>
+      isChecked ? [...prev, serviceId] : prev.filter(id => id !== serviceId)
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -241,6 +363,12 @@ const OrdensServico: React.FC = () => {
       valor: 0,
       observacoes: ''
     });
+    // IMPORTANTE: Limpa a seleção de serviços pré-configurados para evitar
+    // dados incorretos em novas OS e manter a integridade das métricas do dashboard
+    setSelectedServiceIds([]);
+    // IMPORTANTE: Limpa a seleção de serviços pré-configurados para evitar
+    // dados incorretos em novas OS e manter a integridade das métricas do dashboard
+    setSelectedServiceIds([]);
   };
 
   const resetNovoClienteForm = () => {
@@ -606,12 +734,106 @@ const OrdensServico: React.FC = () => {
             </div>
           </div>
 
+          {/* SEÇÃO DE SERVIÇOS PRÉ-CONFIGURADOS */}
+          {/* DASHBOARD INTEGRATION: Esta seção padroniza a entrada de dados para OS,
+              garantindo que as métricas do dashboard principal sejam consistentes:
+              - Faturamento por tipo de serviço
+              - Análise de produtividade por categoria
+              - Relatórios de serviços mais frequentes
+              - Tempo médio por tipo de serviço */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Serviços Pré-configurados
+              </label>
+              <span className="text-xs text-gray-500">
+                {selectedServiceIds.length} selecionado(s)
+              </span>
+            </div>
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-64 overflow-y-auto">
+              {tiposServico.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {tiposServico.map((service) => (
+                    <div key={service.id} className="flex items-start space-x-3 p-3 bg-white rounded-lg border border-gray-100 hover:border-blue-200 transition-colors">
+                      <input
+                        type="checkbox"
+                        id={`service-${service.id}`}
+                        checked={selectedServiceIds.includes(service.id)}
+                        onChange={(e) => handleServiceSelectionChange(service.id, e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <label 
+                          htmlFor={`service-${service.id}`} 
+                          className="block text-sm font-medium text-gray-900 cursor-pointer"
+                        >
+                          {service.nome}
+                        </label>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {service.categoria} • {formatCurrency(service.precoBase || 0)}
+                          {service.tempoEstimado && ` • ${service.tempoEstimado}h`}
+                        </p>
+                        {service.descricao && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            {service.descricao}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-gray-500">
+                    Nenhum serviço pré-configurado disponível
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Configure tipos de serviço em Configurações → Campos Customizados
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {/* Resumo dos serviços selecionados */}
+            {selectedServiceIds.length > 0 && (
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="text-sm font-medium text-blue-900 mb-2">
+                  Resumo dos Serviços Selecionados:
+                </h4>
+                <div className="space-y-1">
+                  {tiposServico
+                    .filter(s => selectedServiceIds.includes(s.id))
+                    .map(service => (
+                      <div key={service.id} className="flex justify-between text-sm">
+                        <span className="text-blue-800">{service.nome}</span>
+                        <span className="font-medium text-blue-900">
+                          {formatCurrency(service.precoBase || 0)}
+                        </span>
+                      </div>
+                    ))}
+                  <div className="border-t border-blue-200 pt-2 mt-2">
+                    <div className="flex justify-between text-sm font-bold">
+                      <span className="text-blue-900">Total Estimado:</span>
+                      <span className="text-blue-900">
+                        {formatCurrency(
+                          tiposServico
+                            .filter(s => selectedServiceIds.includes(s.id))
+                            .reduce((sum, s) => sum + (s.precoBase || 0), 0)
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           <div>
             <Input
               label="Descrição do Serviço *"
               value={formData.descricao}
               onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
               placeholder="Descreva o serviço a ser realizado..."
+              helper={selectedServiceIds.length > 0 ? "Descrição gerada automaticamente. Você pode editá-la se necessário." : undefined}
               required
             />
           </div>
@@ -624,6 +846,7 @@ const OrdensServico: React.FC = () => {
               min="0"
               value={formData.valor}
               onChange={(e) => setFormData(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))}
+              helper={selectedServiceIds.length > 0 ? "Valor calculado automaticamente. Ajuste se necessário." : undefined}
               required
             />
           </div>

@@ -192,6 +192,12 @@ export class DataService {
     if (!moto) throw new Error('Moto não encontrada');
 
     const ordens = this.getOS();
+    
+    // DASHBOARD INTEGRATION: Criação de nova OS com dados padronizados
+    // Os dados aqui criados alimentam diretamente as métricas do dashboard:
+    // - Contadores de OS por status
+    // - Faturamento por período
+    // - Análise de produtividade
     const newOS: OrdemServico = {
       id: generateId(),
       numeroOS: generateOSNumber(),
@@ -365,6 +371,8 @@ export class DataService {
     };
   }
   // Dashboard methods
+  // DASHBOARD CORE: Função principal que calcula todas as métricas exibidas
+  // no dashboard principal. Integra dados de OS, clientes e faturamento
   static async getDashboardMetrics(): Promise<DashboardMetrics> {
     await new Promise(resolve => setTimeout(resolve, 400));
     
@@ -374,8 +382,11 @@ export class DataService {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     
+    // MÉTRICA: Contagem de OS em andamento para o card principal do dashboard
     const osEmAndamento = ordens.filter(os => os.status === 'em_andamento').length;
     
+    // MÉTRICA: Faturamento do mês atual baseado em OS concluídas
+    // Considera apenas OS com status 'concluido' e dataConclusao no mês atual
     const faturamentoMes = ordens
       .filter(os => 
         os.status === 'concluido' && 
@@ -385,16 +396,19 @@ export class DataService {
       )
       .reduce((total, os) => total + os.valor, 0);
     
+    // MÉTRICA: Novos clientes cadastrados no mês atual
     const novosClientes = clientes.filter(c => 
       new Date(c.createdAt).getMonth() === currentMonth &&
       new Date(c.createdAt).getFullYear() === currentYear
     ).length;
     
+    // MÉTRICA: Lista das 5 OS mais recentes para exibição no dashboard
     const osRecentes = ordens
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5);
     
-    // Top clientes calculation
+    // MÉTRICA: Top 5 clientes por número de serviços e valor gasto
+    // Usado para identificar clientes mais valiosos
     const clienteStats = clientes.map(cliente => {
       const clienteOS = ordens.filter(os => os.clienteId === cliente.id);
       return {
