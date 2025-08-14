@@ -131,20 +131,6 @@ const OrdensServico: React.FC = () => {
     loadTiposServico();
     
     // Carrega os tipos de serviço pré-configurados para seleção na criação de OS
-    // DASHBOARD INTEGRATION: Esta funcionalidade garante que os dados de faturamento
-    // por categoria de serviço no dashboard sejam consistentes e precisos
-    const loadTiposServico = async () => {
-      try {
-        const data = await TiposServicoService.getTiposServico();
-        setTiposServico(data.filter(t => t.ativo)); // Apenas serviços ativos
-      } catch (error) {
-        console.error('Erro ao carregar tipos de serviço:', error);
-      }
-    };
-    
-    loadTiposServico();
-  }, []);
-
   // DASHBOARD INTEGRATION: Monitora mudanças na seleção de serviços
   // e atualiza automaticamente descrição e valor para manter consistência
   // dos dados que alimentam as métricas do dashboard principal
@@ -169,16 +155,6 @@ const OrdensServico: React.FC = () => {
 
     setFilteredOrdens(filtered);
   }, [ordens, searchTerm, statusFilter]);
-
-  // DASHBOARD INTEGRATION: Atualiza automaticamente descrição e valor da OS
-  // baseado nos serviços pré-configurados selecionados.
-  // Isso padroniza os dados que alimentam as métricas do dashboard principal:
-  // - Faturamento por tipo de serviço
-  // - Análise de produtividade por categoria
-  // - Relatórios de serviços mais frequentes
-  useEffect(() => {
-    updateDescriptionAndValue();
-  }, [selectedServiceIds, tiposServico]);
 
   const loadData = async () => {
     try {
@@ -246,37 +222,6 @@ const OrdensServico: React.FC = () => {
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
     }
-  };
-
-  // DASHBOARD INTEGRATION: Função que sincroniza os serviços selecionados
-  // com a descrição e valor da OS, garantindo consistência nos dados
-  // que serão utilizados para gerar métricas no dashboard principal
-  const updateDescriptionAndValue = () => {
-    const selectedServices = tiposServico.filter(service =>
-      selectedServiceIds.includes(service.id)
-    );
-
-    if (selectedServices.length > 0) {
-      // Gera descrição padronizada baseada nos serviços selecionados
-      const newDescription = selectedServices.map(service => service.nome).join(', ');
-      
-      // Calcula valor total baseado nos preços base dos serviços
-      const newValue = selectedServices.reduce((sum, service) => sum + (service.precoBase || 0), 0);
-
-      setFormData(prev => ({
-        ...prev,
-        descricao: newDescription,
-        valor: newValue
-      }));
-    }
-  };
-
-  // Gerencia a seleção/deseleção de serviços pré-configurados
-  // Aciona automaticamente a atualização da descrição e valor da OS
-  const handleServiceSelectionChange = (serviceId: string, isChecked: boolean) => {
-    setSelectedServiceIds(prev =>
-      isChecked ? [...prev, serviceId] : prev.filter(id => id !== serviceId)
-    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -363,9 +308,6 @@ const OrdensServico: React.FC = () => {
       valor: 0,
       observacoes: ''
     });
-    // IMPORTANTE: Limpa a seleção de serviços pré-configurados para evitar
-    // dados incorretos em novas OS e manter a integridade das métricas do dashboard
-    setSelectedServiceIds([]);
     // IMPORTANTE: Limpa a seleção de serviços pré-configurados para evitar
     // dados incorretos em novas OS e manter a integridade das métricas do dashboard
     setSelectedServiceIds([]);
