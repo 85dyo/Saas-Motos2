@@ -129,8 +129,9 @@ const OrdensServico: React.FC = () => {
     };
     
     loadTiposServico();
+  }, []);
     
-    // Carrega os tipos de serviço pré-configurados para seleção na criação de OS
+  // Carrega os tipos de serviço pré-configurados para seleção na criação de OS
   // DASHBOARD INTEGRATION: Monitora mudanças na seleção de serviços
   // e atualiza automaticamente descrição e valor para manter consistência
   // dos dados que alimentam as métricas do dashboard principal
