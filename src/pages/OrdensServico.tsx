@@ -874,9 +874,9 @@ const OrdensServico: React.FC = () => {
                   label="Placa *"
                   value={novoClienteData.motos[0].placa}
                   onChange={(e) => updateNovoClienteMoto('placa', e.target.value)}
-                  placeholder="ABC-1234"
+                  placeholder="ABC-1234 ou BRA2E19"
                   error={novoClienteData.motos[0].placa && !validarPlaca(novoClienteData.motos[0].placa) ? 'Formato inválido' : undefined}
-                  helper="Formatos aceitos: ABC-1234 (antigo) ou ABC1D23 (Mercosul)"
+                  helper="Formatos aceitos: ABC-1234 (antigo) ou BRA2E19 (Mercosul)"
                   required
                 />
                 <div>
