@@ -525,7 +525,7 @@ const Clientes: React.FC = () => {
                     onChange={(e) => updateMoto(index, 'placa', e.target.value)}
                     placeholder="ABC-1234 ou ABC1D23"
                     error={moto.placa && !validarPlaca(moto.placa) ? 'Formato inválido' : undefined}
-                    helper="Formatos: ABC-1234 (antigo) ou ABC1D23 (Mercosul)"
+                    helper="Formatos: ABC-1234 (antigo) ou BRA2E19 (Mercosul)"
                     required
                   />
                   <div>
