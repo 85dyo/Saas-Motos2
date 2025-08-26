@@ -232,15 +232,13 @@ export class DataService {
       updatedAt: new Date() 
     };
 
-    // Handle status changes
-    if (updates.status === 'em_andamento' && ordens[index].status === 'aguardando_aprovacao') {
-      updatedOS.dataAprovacao = new Date();
-    }
+    // Handle status changes with proper date tracking
     if (updates.status === 'concluido' && ordens[index].status === 'em_andamento') {
-      updatedOS.dataConclusao = new Date();
-      
       // Integrar com histórico de manutenção quando OS for concluída
       await this.adicionarAoHistoricoManutencao(updatedOS);
+      
+      // Integrar com estoque - baixa automática de peças utilizadas
+      await this.processarBaixaEstoque(updatedOS);
     }
 
     ordens[index] = updatedOS;
@@ -427,5 +425,46 @@ export class DataService {
       osRecentes,
       topClientes: clienteStats
     };
+  }
+  
+  // Processar baixa automática no estoque quando OS for concluída
+  private static async processarBaixaEstoque(os: OrdemServico): Promise<void> {
+    try {
+      // Importar serviço de estoque dinamicamente para evitar dependência circular
+      const { EstoqueService } = await import('./estoqueService');
+      const { TiposServicoService } = await import('./tiposServicoService');
+      
+      // Verificar se a OS foi criada com serviços pré-configurados
+      // Para isso, tentamos identificar os tipos de serviço pela descrição
+      const tiposServico = await TiposServicoService.getTiposServico();
+      const servicosUtilizados = tiposServico.filter(tipo => 
+        os.descricao.toLowerCase().includes(tipo.nome.toLowerCase())
+      );
+      
+      // Processar baixa das peças necessárias para cada serviço
+      for (const servico of servicosUtilizados) {
+        if (servico.pecasNecessarias) {
+          for (const pecaNecessaria of servico.pecasNecessarias) {
+            try {
+              await EstoqueService.movimentarEstoque(
+                pecaNecessaria.pecaId,
+                'saida',
+                pecaNecessaria.quantidade,
+                `Utilizada na OS ${os.numeroOS} - ${servico.nome}`,
+                os.aprovadoPor || os.criadoPor,
+                os.id
+              );
+            } catch (estoqueError) {
+              console.warn(`Não foi possível dar baixa na peça ${pecaNecessaria.pecaId}:`, estoqueError);
+              // Continua o processo mesmo se uma peça não estiver disponível no estoque
+            }
+          }
+        }
+      }
+      
+      console.log(`Baixa automática de estoque processada para OS ${os.numeroOS}`);
+    } catch (error) {
+      console.error('Erro ao processar baixa automática no estoque:', error);
+    }
   }
 }

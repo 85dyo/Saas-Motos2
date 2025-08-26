@@ -88,6 +88,35 @@ const Clientes: React.FC = () => {
     setFilteredClientes(filtered);
   }, [clientes, searchTerm, tipoFilter]);
 
+  // Calcular contagens dos tipos de cliente baseado na lista filtrada
+  const tiposCliente = React.useMemo(() => {
+    // Primeiro aplicar apenas o filtro de busca para calcular as contagens corretas
+    let clientesParaContagem = clientes;
+    
+    if (searchTerm) {
+      clientesParaContagem = clientes.filter(cliente => 
+        cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cliente.telefone.includes(searchTerm) ||
+        cliente.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cliente.cpf?.includes(searchTerm) ||
+        cliente.motos.some(moto => 
+          moto.modelo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          moto.placa.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    }
+    
+    return [
+      { value: 'todos', label: 'Todos os Clientes', count: clientesParaContagem.length },
+      { value: 'ativo', label: 'Ativos', count: clientesParaContagem.filter(c => c.tipoCliente === 'ativo' || !c.tipoCliente).length },
+      { value: 'vip', label: 'VIP', count: clientesParaContagem.filter(c => c.tipoCliente === 'vip').length },
+      { value: 'leal', label: 'Leais', count: clientesParaContagem.filter(c => c.tipoCliente === 'leal').length },
+      { value: 'potencial', label: 'Potenciais', count: clientesParaContagem.filter(c => c.tipoCliente === 'potencial').length },
+      { value: 'inativo', label: 'Inativos', count: clientesParaContagem.filter(c => c.tipoCliente === 'inativo').length },
+      { value: 'problema', label: 'Problemas', count: clientesParaContagem.filter(c => c.tipoCliente === 'problema').length }
+    ];
+  }, [clientes, searchTerm]);
+
   const loadData = async () => {
     try {
       const clientesData = await DataService.getAllClientes();
@@ -245,13 +274,13 @@ const Clientes: React.FC = () => {
   };
 
   const tiposCliente = [
-    { value: 'todos', label: 'Todos os Clientes', count: clientes.length },
-    { value: 'ativo', label: 'Ativos', count: clientes.filter(c => c.tipoCliente === 'ativo' || !c.tipoCliente).length },
-    { value: 'vip', label: 'VIP', count: clientes.filter(c => c.tipoCliente === 'vip').length },
-    { value: 'leal', label: 'Leais', count: clientes.filter(c => c.tipoCliente === 'leal').length },
-    { value: 'potencial', label: 'Potenciais', count: clientes.filter(c => c.tipoCliente === 'potencial').length },
-    { value: 'inativo', label: 'Inativos', count: clientes.filter(c => c.tipoCliente === 'inativo').length },
-    { value: 'problema', label: 'Problemas', count: clientes.filter(c => c.tipoCliente === 'problema').length }
+    { value: 'todos', label: 'Todos os Clientes', count: filteredClientes.length },
+    { value: 'ativo', label: 'Ativos', count: filteredClientes.filter(c => c.tipoCliente === 'ativo' || !c.tipoCliente).length },
+    { value: 'vip', label: 'VIP', count: filteredClientes.filter(c => c.tipoCliente === 'vip').length },
+    { value: 'leal', label: 'Leais', count: filteredClientes.filter(c => c.tipoCliente === 'leal').length },
+    { value: 'potencial', label: 'Potenciais', count: filteredClientes.filter(c => c.tipoCliente === 'potencial').length },
+    { value: 'inativo', label: 'Inativos', count: filteredClientes.filter(c => c.tipoCliente === 'inativo').length },
+    { value: 'problema', label: 'Problemas', count: filteredClientes.filter(c => c.tipoCliente === 'problema').length }
   ];
 
   if (isLoading) {

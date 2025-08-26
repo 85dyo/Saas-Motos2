@@ -180,15 +180,21 @@ const OrdensServico: React.FC = () => {
 
       const ordensData = await DataService.getAllOS();
       
-      const novasOS = ordensData.filter(os => 
+      // Aplicar filtro de status se não for "todos"
+      let ordensFiltradasParaDashboard = ordensData;
+      if (filtros.status !== 'todos') {
+        ordensFiltradasParaDashboard = ordensData.filter(os => os.status === filtros.status);
+      }
+      
+      const novasOS = ordensFiltradasParaDashboard.filter(os => 
         new Date(os.createdAt) >= diasAtras
       ).length;
 
-      const osEmAndamento = ordensData.filter(os => os.status === 'em_andamento').length;
-      const osAguardandoAprovacao = ordensData.filter(os => os.status === 'aguardando_aprovacao').length;
-      const osConcluidas = ordensData.filter(os => os.status === 'concluido').length;
+      const osEmAndamento = ordensFiltradasParaDashboard.filter(os => os.status === 'em_andamento').length;
+      const osAguardandoAprovacao = ordensFiltradasParaDashboard.filter(os => os.status === 'aguardando_aprovacao').length;
+      const osConcluidas = ordensFiltradasParaDashboard.filter(os => os.status === 'concluido').length;
 
-      const faturamentoPeriodo = ordensData
+      const faturamentoPeriodo = ordensFiltradasParaDashboard
         .filter(os => 
           os.status === 'concluido' && 
           os.dataConclusao &&
@@ -196,19 +202,19 @@ const OrdensServico: React.FC = () => {
         )
         .reduce((sum, os) => sum + os.valor, 0);
 
-      const tempoMedioConclusao = ordensData
+      const tempoMedioConclusao = ordensFiltradasParaDashboard
         .filter(os => os.dataConclusao && os.dataAprovacao)
         .reduce((acc, os) => {
           const inicio = new Date(os.dataAprovacao!).getTime();
           const fim = new Date(os.dataConclusao!).getTime();
           return acc + (fim - inicio) / (1000 * 60 * 60 * 24);
-        }, 0) / ordensData.filter(os => os.dataConclusao && os.dataAprovacao).length || 0;
+        }, 0) / ordensFiltradasParaDashboard.filter(os => os.dataConclusao && os.dataAprovacao).length || 0;
 
       const osPorStatus = {
-        'aguardando_aprovacao': osAguardandoAprovacao,
-        'em_andamento': osEmAndamento,
-        'concluido': osConcluidas,
-        'cancelado': ordensData.filter(os => os.status === 'cancelado').length
+        'aguardando_aprovacao': ordensFiltradasParaDashboard.filter(os => os.status === 'aguardando_aprovacao').length,
+        'em_andamento': ordensFiltradasParaDashboard.filter(os => os.status === 'em_andamento').length,
+        'concluido': ordensFiltradasParaDashboard.filter(os => os.status === 'concluido').length,
+        'cancelado': ordensFiltradasParaDashboard.filter(os => os.status === 'cancelado').length
       };
 
       setDashboardData({
@@ -218,7 +224,7 @@ const OrdensServico: React.FC = () => {
         faturamentoPeriodo,
         tempoMedioConclusao: Math.round(tempoMedioConclusao),
         osPorStatus,
-        totalOS: ordensData.length
+        totalOS: ordensFiltradasParaDashboard.length
       });
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
@@ -287,17 +293,66 @@ const OrdensServico: React.FC = () => {
 
   const handleStatusUpdate = async (osId: string, newStatus: OrdemServico['status']) => {
     try {
+      const os = ordens.find(o => o.id === osId);
+      if (!os) return;
+      
+      // Validações de permissão baseadas no status e usuário
+      if (newStatus === 'em_andamento') {
+        // Apenas admin pode aprovar OS
+        if (user?.role !== 'admin') {
+          showToast({
+            message: 'Apenas administradores podem aprovar ordens de serviço',
+            type: 'error'
+          });
+          return;
+        }
+        
+        // Usuário não pode aprovar sua própria OS
+        if (user?.id === os.criadoPor) {
+          showToast({
+            message: 'Você não pode aprovar uma OS criada por você mesmo',
+            type: 'error'
+          });
+          return;
+        }
+      }
+      
+      if (newStatus === 'concluido') {
+        // Admin ou funcionário podem concluir OS
+        if (user?.role !== 'admin' && user?.role !== 'funcionario') {
+          showToast({
+            message: 'Apenas administradores ou funcionários podem concluir ordens de serviço',
+            type: 'error'
+          });
+          return;
+        }
+      }
+      
       const updates: any = { status: newStatus };
       
       if (newStatus === 'em_andamento' && user) {
         updates.aprovadoPor = user.id;
+        updates.dataAprovacao = new Date();
+      }
+      
+      if (newStatus === 'concluido' && user) {
+        updates.dataConclusao = new Date();
       }
 
       await DataService.updateOS(osId, updates);
       await loadData();
       await loadDashboardData();
+      
+      showToast({
+        message: `OS ${newStatus === 'em_andamento' ? 'aprovada' : 'concluída'} com sucesso!`,
+        type: 'success'
+      });
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
+      showToast({
+        message: 'Erro ao atualizar status da OS',
+        type: 'error'
+      });
     }
   };
 
@@ -585,6 +640,8 @@ const OrdensServico: React.FC = () => {
                     variant="outline"
                     onClick={() => handleStatusUpdate(os.id, 'em_andamento')}
                     className="flex-1"
+                    disabled={user.id === os.criadoPor}
+                    title={user.id === os.criadoPor ? 'Você não pode aprovar uma OS criada por você' : 'Aprovar OS'}
                   >
                     <CheckCircle className="h-4 w-4 mr-1" />
                     Aprovar
@@ -592,7 +649,7 @@ const OrdensServico: React.FC = () => {
                 </div>
               )}
 
-              {os.status === 'em_andamento' && (
+              {os.status === 'em_andamento' && (user?.role === 'admin' || user?.role === 'funcionario') && (
                 <Button
                   size="sm"
                   onClick={() => handleStatusUpdate(os.id, 'concluido')}
