@@ -7,7 +7,7 @@ import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
 import { Select } from '../components/ui/Select';
 import { useToast } from '../contexts/ToastContext';
-import { dataService } from '../services/dataService';
+import { DataService } from '../services/dataService';
 import { formatPhone, formatCPF } from '../utils/formatters';
 import { validatePlate } from '../utils/motorcycleData';
 
@@ -61,7 +61,7 @@ export default function Clientes() {
   const loadClientes = async () => {
     try {
       setLoading(true);
-      const data = await dataService.getClientes();
+      const data = await DataService.getClientes();
       setClientes(data);
     } catch (error) {
       showToast('Erro ao carregar clientes', 'error');
@@ -126,10 +126,10 @@ export default function Clientes() {
       };
 
       if (editingCliente) {
-        await dataService.updateCliente(editingCliente.id, clienteData);
+        await DataService.updateCliente(editingCliente.id, clienteData);
         showToast('Cliente atualizado com sucesso!', 'success');
       } else {
-        await dataService.createCliente(clienteData);
+        await DataService.createCliente(clienteData);
         showToast('Cliente criado com sucesso!', 'success');
       }
 
@@ -163,7 +163,7 @@ export default function Clientes() {
   const handleDelete = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
       try {
-        await dataService.deleteCliente(id);
+        await DataService.deleteCliente(id);
         showToast('Cliente excluído com sucesso!', 'success');
         loadClientes();
       } catch (error) {
