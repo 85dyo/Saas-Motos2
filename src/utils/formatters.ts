@@ -34,3 +34,4 @@ export const formatPlaca = (placa: string): string => {
   if (digits.length >= 7) {
     return `${digits.slice(0, 3)}-${digits.slice(3, 7)}`;
   }
+}
