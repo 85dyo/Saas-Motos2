@@ -29,9 +29,18 @@ export const formatPhone = (phone: string): string => {
   return phone;
 };
 
+export const formatCPF = (cpf: string): string => {
+  const digits = cpf.replace(/\D/g, '');
+  if (digits.length === 11) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  }
+  return cpf;
+};
+
 export const formatPlaca = (placa: string): string => {
   const digits = placa.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
   if (digits.length >= 7) {
     return `${digits.slice(0, 3)}-${digits.slice(3, 7)}`;
   }
+  return placa;
 }

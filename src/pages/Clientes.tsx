@@ -9,7 +9,7 @@ import { Select } from '../components/ui/Select';
 import { useToast } from '../contexts/ToastContext';
 import { DataService } from '../services/dataService';
 import { formatPhone, formatCPF } from '../utils/formatters';
-import { validatePlate } from '../utils/motorcycleData';
+import { validarPlaca } from '../utils/motorcycleData';
 
 interface Moto {
   id: string;
@@ -114,7 +114,7 @@ export default function Clientes() {
     try {
       // Validar placas
       for (const moto of formData.motos) {
-        if (moto.placa && !validatePlate(moto.placa)) {
+        if (moto.placa && !validarPlaca(moto.placa)) {
           showToast('Placa inválida. Use o formato ABC-1234 ou ABC1D23 (Mercosul)', 'error');
           return;
         }
