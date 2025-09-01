@@ -137,6 +137,16 @@ export class AutomacaoService {
   private static async chamarWebhook(automacao: ConfiguracaoAutomacao, dados: any): Promise<void> {
     if (!automacao.configuracao.n8nWebhookUrl) return;
 
+    // Verificar se é uma URL de demonstração/exemplo
+    if (automacao.configuracao.n8nWebhookUrl.includes('exemplo.com') || 
+        automacao.configuracao.n8nWebhookUrl.includes('localhost')) {
+      console.log(`Simulando webhook para ${automacao.nome} (URL de demonstração):`, {
+        evento: automacao.trigger.evento,
+        dados: dados
+      });
+      return;
+    }
+
     const payload = {
       evento: automacao.trigger.evento,
       timestamp: new Date().toISOString(),
