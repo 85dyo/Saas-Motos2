@@ -142,6 +142,15 @@ export class DataService {
     };
     clientes.push(newCliente);
     this.saveClientes(clientes);
+    
+    // Trigger automation for client creation
+    try {
+      const { AutomacaoService } = await import('./automacaoService');
+      await AutomacaoService.executarAutomacao('cliente_cadastrado', { cliente: newCliente });
+    } catch (error) {
+      console.error('Erro ao executar automação cliente_cadastrado:', error);
+    }
+    
     return newCliente;
   }
 
@@ -153,6 +162,15 @@ export class DataService {
     
     clientes[index] = { ...clientes[index], ...updates, updatedAt: new Date() };
     this.saveClientes(clientes);
+    
+    // Trigger automation for client update
+    try {
+      const { AutomacaoService } = await import('./automacaoService');
+      await AutomacaoService.executarAutomacao('cliente_atualizado', { cliente: clientes[index] });
+    } catch (error) {
+      console.error('Erro ao executar automação cliente_atualizado:', error);
+    }
+    
     return clientes[index];
   }
 
@@ -243,6 +261,19 @@ export class DataService {
 
     ordens[index] = updatedOS;
     this.saveOS(ordens);
+    
+    // Trigger automation for OS update
+    try {
+      const { AutomacaoService } = await import('./automacaoService');
+      await AutomacaoService.executarAutomacao('os_atualizada', { 
+        os: updatedOS,
+        osOriginal,
+        mudancas: updates
+      });
+    } catch (error) {
+      console.error('Erro ao executar automação os_atualizada:', error);
+    }
+    
     return updatedOS;
   }
 

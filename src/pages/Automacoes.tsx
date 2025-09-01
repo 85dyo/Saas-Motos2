@@ -407,8 +407,10 @@ const Automacoes: React.FC = () => {
               >
                 <option value="os_criada">OS Criada</option>
                 <option value="os_concluida">OS Concluída</option>
+                <option value="os_atualizada">OS Atualizada</option>
                 <option value="alerta_manutencao">Alerta de Manutenção</option>
                 <option value="cliente_cadastrado">Cliente Cadastrado</option>
+                <option value="cliente_atualizado">Cliente Atualizado</option>
               </select>
             </div>
           </div>

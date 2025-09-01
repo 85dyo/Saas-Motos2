@@ -137,7 +137,7 @@ export interface ConfiguracaoAutomacao {
   tipo: 'whatsapp' | 'email' | 'sms' | 'webhook';
   ativo: boolean;
   trigger: {
-    evento: 'os_criada' | 'os_concluida' | 'alerta_manutencao' | 'cliente_cadastrado';
+    evento: 'os_criada' | 'os_concluida' | 'os_atualizada' | 'alerta_manutencao' | 'cliente_cadastrado' | 'cliente_atualizado';
     condicoes?: any;
   };
   acao: {

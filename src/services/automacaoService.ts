@@ -36,6 +36,57 @@ export class AutomacaoService {
       configuracao: {
         n8nWebhookUrl: 'https://n8n.exemplo.com/webhook/os-concluida'
       }
+    },
+    {
+      id: '3',
+      nome: 'Webhook n8n - OS Atualizada',
+      tipo: 'webhook',
+      ativo: true,
+      trigger: {
+        evento: 'os_atualizada'
+      },
+      acao: {
+        template: 'webhook_os_atualizada',
+        destinatario: 'n8n',
+        parametros: {}
+      },
+      configuracao: {
+        n8nWebhookUrl: 'https://n8n.exemplo.com/webhook/os-atualizada'
+      }
+    },
+    {
+      id: '4',
+      nome: 'Webhook n8n - Cliente Cadastrado',
+      tipo: 'webhook',
+      ativo: true,
+      trigger: {
+        evento: 'cliente_cadastrado'
+      },
+      acao: {
+        template: 'webhook_cliente_cadastrado',
+        destinatario: 'n8n',
+        parametros: {}
+      },
+      configuracao: {
+        n8nWebhookUrl: 'https://n8n.exemplo.com/webhook/cliente-cadastrado'
+      }
+    },
+    {
+      id: '5',
+      nome: 'Webhook n8n - Cliente Atualizado',
+      tipo: 'webhook',
+      ativo: true,
+      trigger: {
+        evento: 'cliente_atualizado'
+      },
+      acao: {
+        template: 'webhook_cliente_atualizado',
+        destinatario: 'n8n',
+        parametros: {}
+      },
+      configuracao: {
+        n8nWebhookUrl: 'https://n8n.exemplo.com/webhook/cliente-atualizado'
+      }
     }
   ];
 
@@ -96,15 +147,26 @@ export class AutomacaoService {
       }
     };
 
-    // Simulação da chamada webhook
-    console.log(`Chamando webhook n8n: ${automacao.configuracao.n8nWebhookUrl}`, payload);
-    
-    // Em produção, seria algo como:
-    // await fetch(automacao.configuracao.n8nWebhookUrl, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(payload)
-    // });
+    try {
+      console.log(`Enviando webhook para n8n: ${automacao.configuracao.n8nWebhookUrl}`, payload);
+      
+      const response = await fetch(automacao.configuracao.n8nWebhookUrl, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        console.log(`Webhook enviado com sucesso para ${automacao.nome}`);
+      } else {
+        console.error(`Erro no webhook ${automacao.nome}: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error(`Erro ao chamar webhook ${automacao.nome}:`, error);
+    }
   }
 
   private static async enviarEmail(automacao: ConfiguracaoAutomacao, dados: any): Promise<void> {
