@@ -195,6 +195,13 @@ export class EvolutionApiService {
   static async verificarStatus(): Promise<string> {
     this.loadConfig();
     try {
+      // Se for URL de exemplo/demo, simular status conectado
+      if (this.config.baseUrl.includes('exemplo.com') || this.config.baseUrl.includes('localhost')) {
+        console.log('Demo mode: Simulando status conectado Evolution API');
+        this.config.status = 'connected';
+        return 'connected';
+      }
+
       const response = await fetch(`${this.config.baseUrl}/instance/connectionState/${this.config.instanceName}`, {
         method: 'GET',
         headers: {

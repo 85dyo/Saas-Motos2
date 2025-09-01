@@ -14,6 +14,12 @@ export class N8nService {
   // Enviar evento para N8N
   static async enviarEvento(evento: string, dados: any): Promise<boolean> {
     try {
+      // Se for URL de exemplo/demo, simular sucesso
+      if (this.baseUrl.includes('exemplo.com') || this.baseUrl.includes('localhost')) {
+        console.log('Demo mode: Simulando envio de evento N8N:', { evento, dados });
+        return true;
+      }
+
       const payload = {
         evento,
         timestamp: new Date().toISOString(),
