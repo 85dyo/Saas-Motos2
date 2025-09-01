@@ -11,9 +11,17 @@ export class EvolutionApiService {
 
   // Carregar configuração do localStorage
   static loadConfig(): void {
-    const stored = localStorage.getItem('evolution_api_config');
+    const stored = localStorage.getItem('motogestor_config');
     if (stored) {
-      this.config = { ...this.config, ...JSON.parse(stored) };
+      const motogestorConfig = JSON.parse(stored);
+      if (motogestorConfig.integracao) {
+        this.config = {
+          ...this.config,
+          baseUrl: motogestorConfig.integracao.evolutionApiUrl || this.config.baseUrl,
+          apiKey: motogestorConfig.integracao.evolutionApiKey || this.config.apiKey,
+          instanceName: motogestorConfig.integracao.evolutionInstanceName || this.config.instanceName
+        };
+      }
     }
   }
 
