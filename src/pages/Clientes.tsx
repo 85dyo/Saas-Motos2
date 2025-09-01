@@ -26,7 +26,7 @@ interface Cliente {
   telefone: string;
   cpf?: string;
   endereco: string;
-  tipo: 'ativo' | 'inativo' | 'vip';
+  tipoCliente: 'ativo' | 'inativo' | 'vip';
   motos: Moto[];
   criadoEm: string;
 }
@@ -50,7 +50,7 @@ export default function Clientes() {
     telefone: '',
     cpf: '',
     endereco: '',
-    tipo: 'ativo' as const,
+    tipoCliente: 'ativo' as const,
     motos: [{ modelo: '', placa: '', ano: new Date().getFullYear(), cor: '' }]
   });
 
@@ -89,7 +89,7 @@ export default function Clientes() {
   // Aplicar filtro de tipo aos clientes já filtrados pela busca
   const filteredClientes = useMemo(() => {
     if (tipoFiltro === 'todos') return filteredBySearch;
-    return filteredBySearch.filter(cliente => cliente.tipo === tipoFiltro);
+    return filteredBySearch.filter(cliente => cliente.tipoCliente === tipoFiltro);
   }, [filteredBySearch, tipoFiltro]);
 
   // Calcular contagens baseadas na lista filtrada pela busca
@@ -102,7 +102,7 @@ export default function Clientes() {
     };
 
     filteredBySearch.forEach(cliente => {
-      counts[cliente.tipo]++;
+      counts[cliente.tipoCliente]++;
     });
 
     return counts;
@@ -149,7 +149,7 @@ export default function Clientes() {
       telefone: cliente.telefone,
       cpf: cliente.cpf || '',
       endereco: cliente.endereco,
-      tipo: cliente.tipo,
+      tipoCliente: cliente.tipoCliente,
       motos: cliente.motos.length > 0 ? cliente.motos : [{ modelo: '', placa: '', ano: new Date().getFullYear(), cor: '' }]
     });
     setShowModal(true);
@@ -179,7 +179,7 @@ export default function Clientes() {
       telefone: '',
       cpf: '',
       endereco: '',
-      tipo: 'ativo',
+      tipoCliente: 'ativo',
       motos: [{ modelo: '', placa: '', ano: new Date().getFullYear(), cor: '' }]
     });
     setEditingCliente(null);
@@ -208,12 +208,12 @@ export default function Clientes() {
     }));
   };
 
-  const getBadgeColor = (tipo: string) => {
-    switch (tipo) {
-      case 'ativo': return 'green';
-      case 'inativo': return 'red';
-      case 'vip': return 'purple';
-      default: return 'gray';
+  const getBadgeVariant = (tipoCliente: string) => {
+    switch (tipoCliente) {
+      case 'ativo': return 'success';
+      case 'inativo': return 'error';
+      case 'vip': return 'info';
+      default: return 'default';
     }
   };
 
@@ -313,8 +313,8 @@ export default function Clientes() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="text-lg font-semibold text-gray-900">{cliente.nome}</h3>
-                    <Badge color={getBadgeColor(cliente.tipo)}>
-                      {cliente.tipo.toUpperCase()}
+                    <Badge variant={getBadgeVariant(cliente.tipoCliente)}>
+                      {cliente.tipoCliente.toUpperCase()}
                     </Badge>
                   </div>
                   
@@ -423,8 +423,8 @@ export default function Clientes() {
 
           <Select
             label="Tipo de Cliente *"
-            value={formData.tipo}
-            onChange={(value) => setFormData(prev => ({ ...prev, tipo: value as any }))}
+            value={formData.tipoCliente}
+            onChange={(value) => setFormData(prev => ({ ...prev, tipoCliente: value as any }))}
             options={[
               { value: 'ativo', label: 'Ativo' },
               { value: 'inativo', label: 'Inativo' },
@@ -518,8 +518,8 @@ export default function Clientes() {
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-4">
               <h3 className="text-xl font-semibold">{viewingCliente.nome}</h3>
-              <Badge color={getBadgeColor(viewingCliente.tipo)}>
-                {viewingCliente.tipo.toUpperCase()}
+              <Badge variant={getBadgeVariant(viewingCliente.tipoCliente)}>
+                {viewingCliente.tipoCliente.toUpperCase()}
               </Badge>
             </div>
 
