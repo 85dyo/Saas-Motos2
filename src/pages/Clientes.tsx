@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Search, Users, UserCheck, UserX, Edit, Trash2, Eye } from 'lucide-react';
+import { Cliente, Moto } from '../types';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -10,26 +11,6 @@ import { useToast } from '../contexts/ToastContext';
 import { DataService } from '../services/dataService';
 import { formatPhone, formatCPF } from '../utils/formatters';
 import { validarPlaca } from '../utils/motorcycleData';
-
-interface Moto {
-  id: string;
-  modelo: string;
-  placa: string;
-  ano: number;
-  cor: string;
-}
-
-interface Cliente {
-  id: string;
-  nome: string;
-  email?: string;
-  telefone: string;
-  cpf?: string;
-  endereco: string;
-  tipoCliente: 'ativo' | 'inativo' | 'vip';
-  motos: Moto[];
-  criadoEm: string;
-}
 
 type TipoFiltro = 'todos' | 'ativo' | 'inativo' | 'vip';
 
@@ -209,7 +190,7 @@ export default function Clientes() {
   };
 
   const getBadgeVariant = (tipoCliente: string) => {
-    switch (tipoCliente) {
+    switch (tipoCliente || 'ativo') {
       case 'ativo': return 'success';
       case 'inativo': return 'error';
       case 'vip': return 'info';
@@ -314,7 +295,7 @@ export default function Clientes() {
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="text-lg font-semibold text-gray-900">{cliente.nome}</h3>
                     <Badge variant={getBadgeVariant(cliente.tipoCliente)}>
-                      {cliente.tipoCliente.toUpperCase()}
+                      {(cliente.tipoCliente || 'ativo').toUpperCase()}
                     </Badge>
                   </div>
                   
@@ -519,7 +500,7 @@ export default function Clientes() {
             <div className="flex items-center gap-3 mb-4">
               <h3 className="text-xl font-semibold">{viewingCliente.nome}</h3>
               <Badge variant={getBadgeVariant(viewingCliente.tipoCliente)}>
-                {viewingCliente.tipoCliente.toUpperCase()}
+                {(viewingCliente.tipoCliente || 'ativo').toUpperCase()}
               </Badge>
             </div>
 

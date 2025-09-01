@@ -26,8 +26,8 @@ export interface Cliente {
   email?: string;
   telefone: string;
   cpf?: string;
-  endereco?: string;
-  tipoCliente?: 'ativo' | 'inativo' | 'vip' | 'potencial' | 'leal' | 'problema';
+  endereco: string;
+  tipoCliente: 'ativo' | 'inativo' | 'vip';
   observacoes?: string;
   motos: Moto[];
   createdAt: Date;
